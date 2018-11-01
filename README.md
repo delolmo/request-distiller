@@ -10,7 +10,7 @@ Powerful, flexible validation and filtering for PSR-7 requests.
 
 Frameworks usually rely on controllers to read information from the HTTP request and return a response. HTTP requests are usually mapped to controller methods by using a Router component. The Router, however, is meant to match the request using url parameters, request methods, request headers, etc. but validation itself of the request is done in the controller.
 
-Consider the following controller.
+Consider the following controller:
 
 ```php
 namespace App\controller;
@@ -48,7 +48,7 @@ class Usercontroller
 
 When the application starts to grow and validation logic gets more complex, many controller methods get populated with a considerable amount of repeated code, making the application less maintainable and the code harder to understand.
 
-This library aims at creating an extra layer of logic, sitting between the Router and the controller, to check if the HTTP Request is valid and keep your code organized as your application start to grow.
+This library aims at creating an extra layer of logic, sitting between the Router and the controller, to check if the HTTP Request is valid and keep your code organized as your application grows.
 
 ## Requirements
 
@@ -107,7 +107,7 @@ $data = $distiller->getData();
 
 ## Organizing your Distiller objects
 
-As you've seen, a Distiller obejct can be created and used directly in a controller. However, a better practice is to build the Distiller n a separate, standalone PHP class, which can be reused anywhere in your application. Create a new clas that will house the logic for validating the HTTP request:
+As you've seen, a Distiller obejct can be created and used directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
 
 ```php
 
@@ -158,7 +158,7 @@ class Usercontroller
 {
     /**
      * @Route('/users/{user-id}')
-     \*/
+     */
     public function show(Request $request)
     {
         $connection = $this->getContainer()->get('connection');
