@@ -1,4 +1,4 @@
-# request-distiller
+# delolmo/request-distiller
 
  [![Packagist Version](https://img.shields.io/packagist/v/delolmo/request-distiller.svg?style=flat-square)](https://packagist.org/packages/delolmo/request-distiller)
  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
