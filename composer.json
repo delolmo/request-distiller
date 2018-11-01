@@ -1,8 +1,17 @@
 {
     "name": "delolmo/request-distiller",
     "type": "library",
-    "description": "Provides a utility for validating and filtering a PSR Request.",
+    "description": "Powerful, flexible validation and filtering for PSR-7 requests.",
     "license": "MIT",
+    "keywords": [
+        "psr-7",
+        "http",
+        "validate",
+        "validator",
+        "filter",
+        "zend-filter",
+        "zend-validator"
+    ],
     "homepage": "https://github.com/delolmo/request-distiller",
     "support": {
         "issues": "https://github.com/delolmo/request-distiller/issues"
@@ -18,7 +27,7 @@
         }
     },
     "require": {
-        "php": "^5.5 || ^7.0",
+        "php": ">=7.1",
         "psr/http-server-middleware": "^1.0",
         "psr/http-message": "^1.0",
         "zendframework/zend-filter": "^2.8",
