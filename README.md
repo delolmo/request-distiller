@@ -24,7 +24,6 @@ composer require delolmo/request-distiller
 Consider the following Psr\Http\Message\RequestInterface:
 
 ``` php
-
 use Zend\Diactoros\ServerRequest;
 
 $request = (new ServerRequest([], [], '/', 'POST'))
