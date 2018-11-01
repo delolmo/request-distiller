@@ -6,6 +6,50 @@
 
 Powerful, flexible validation and filtering for PSR-7 requests.
 
+## Description
+
+Frameworks usually rely on controllers to read information from the HTTP request and return a response. HTTP requests are usually mapped to controller methods by using a Router component. The Router, however, is meant to match the request using url parameters, request methods, request headers, etc. but validation itself of the request is done in the controller.
+
+Consider the following controller.
+
+```php
+namespace App\controller;
+
+use App\Entity\User;
+use Psr\Http\Message\RequestInterface as Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+class Usercontroller
+{
+    /**
+     * @Route('/users/{user-id}')
+     \*/
+    public function show(Request $request)
+    {
+        $userId = $request->getAttribute('user-id');
+
+        // Check if the userId exists in the database
+        // Check whether the logged user has authorization to view the user details (ACLs, RBACs, etc.)
+        // Validate parameters in the request body (i.e. a form submission)
+        // Other business logic to check if the request is valid
+        // ...
+
+        // Until this point, all we did was check that the Request was valid
+        $user = $em->find($userId);
+
+        // Only beyond this point, do we begin to consider the normal behavior of the controller
+        // Do stuff, like showing the user's page
+        return new HtmlResponse($this->render([
+            "user" => $user
+        ]);
+    }
+}
+```
+
+When the application starts to grow and validation logic gets more complex, many controller methods get populated with a considerable amount of repeated code, making the application less maintainable and the code harder to understand.
+
+This library aims at creating an extra layer of logic, sitting between the Router and the controller, to check if the HTTP Request is valid and keep your code organized as your application start to grow.
+
 ## Requirements
 
 * PHP >= 7.1
@@ -19,7 +63,7 @@ This package is installable and autoloadable via Composer as [delolmo/request-di
 composer require delolmo/request-distiller
 ```
 
-## Example
+## Getting started
 
 Consider the following Psr\Http\Message\RequestInterface:
 
@@ -53,11 +97,91 @@ $distiller->addFilter('name', new StringTrim());
 $distiller->addFilter('type', new ToInt());
 
 if (!$distiller->isValid()) {
-    // do something, like a redirect
+    // Do something, like a redirect
 }
 
-// will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
+// Will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
 $data = $distiller->getData();
 
 ```
 
+## Organizing your Distiller objects
+
+As you've seen, a Distiller obejct can be created and used directly in a controller. However, a better practice is to build the Distiller n a separate, standalone PHP class, which can be reused anywhere in your application. Create a new clas that will house the logic for validating the HTTP request:
+
+```php
+
+namespace App\Distiller;
+
+use App\Filter\ToUserEntity;
+use App\Validator\DenyAccessUnlessGranted;
+use App\Validator\UsernameExists;
+use DelOlmo\Distiller\Distiller;
+use Doctrine\DBAL\Connection;
+use Psr\Http\Message\RequestInterface;
+use Zend\Filter\StringTrim;
+use Zend\Filter\ToInt;
+use Zend\Validator\Digits;
+use Zend\Validator\EmailAddress;
+use Zend\Validator\NotEmpty;
+
+class ChangeUserEmailDistiller extends Distiller
+{
+    public function __construct(Connection $connection)
+    {
+        // Validators for the 'credentials' field
+        $this->addValidator('credentials', new DenyAccessUnlessGranted(), true);
+
+        // Validators for the 'username' field
+        $this->addValidator('username', new NotEmpty(), true);
+        $this->addValidator('username', new UsernameExists($connection), true);
+
+        // Validators for the 'email' field
+        $this->addValidator('email', new NotEmpty(), true);
+        $this->addValidator('email', new EmailAddress(), true);
+    }
+}
+
+```
+
+This new class contains all the directions needed to validate the HTTP request. It can be used to validate the request in the controller:
+
+
+```php
+namespace App\controller;
+
+use App\Entity\User;
+use Psr\Http\Message\RequestInterface as Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+class Usercontroller
+{
+    /**
+     * @Route('/users/{user-id}')
+     \*/
+    public function show(Request $request)
+    {
+        $connection = $this->getContainer()->get('connection');
+        $distiller = new App\Distiller\ChangeUserEmailDistiller($connection);
+
+        if (!$distiller->isValid()) {
+            // Redirect, throw a 403 error, etc.
+        }
+
+        $data = $distiller->getData();
+
+        // Do stuff, like showing the user's page
+        return new HtmlResponse($this->render([
+            "user" => $data['user']
+        ]);
+    }
+}
+```
+
+## Adding validators, filters and callbacks
+
+
+## Using an Extractor
+
+
+## Creating a custom Extractor
