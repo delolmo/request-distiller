@@ -176,7 +176,7 @@ class Distiller implements DistillerInterface
         }
 
         // The form is valid if and only if no error was generated
-        return count($this->errors) === 0;
+        return \count($this->errors) === 0;
     }
 
     /**
