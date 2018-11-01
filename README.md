@@ -39,7 +39,6 @@ $request = (new ServerRequest([], [], '/', 'POST'))
 Distiller objects allow validating and filtering such types of PSR Request objects.
 
 ``` php
-
 use Zend\Filter\StringTrim;
 use Zend\Filter\ToInt;
 use Zend\Validator\Digits;
