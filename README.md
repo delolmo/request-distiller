@@ -23,7 +23,7 @@ class Usercontroller
 {
     /**
      * @Route('/users/{user-id}')
-     \*/
+     */
     public function show(Request $request)
     {
         $userId = $request->getAttribute('user-id');
