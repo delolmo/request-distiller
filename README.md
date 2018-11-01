@@ -56,7 +56,7 @@ if (!$distiller->isValid()) {
     // do something, like a redirect
 }
 
-// will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', type => 1);
+// will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
 $data = $distiller->getData();
 
 ```
