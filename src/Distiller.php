@@ -29,7 +29,7 @@ class Distiller implements DistillerInterface
     protected $extractor;
 
     /**
-     * @var Zend\Filter\FilterInterface[]
+     * @var \Zend\Filter\FilterInterface[]
      */
     protected $filters = [];
 
@@ -39,12 +39,12 @@ class Distiller implements DistillerInterface
     protected $errors = [];
 
     /**
-     * @var Zend\Validator\ValidatorInterface[]
+     * @var \Zend\Validator\ValidatorInterface[]
      */
     protected $validators = [];
 
     /**
-     * @var Psr\Http\Message\ServerRequestInterface
+     * @var \Psr\Http\Message\ServerRequestInterface
      */
     protected $request;
 

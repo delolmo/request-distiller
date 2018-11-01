@@ -34,7 +34,7 @@ interface DistillerInterface
      * Añade una regla de filtrado para el campo $field.
      *
      * @param string $field
-     * @param ValidatorInterface $filter
+     * @param \Zend\Filter\FilterInterface $filter
      */
     public function addFilter(string $field, Filter $filter);
 
@@ -42,7 +42,7 @@ interface DistillerInterface
      * Añade una regla de validación para el campo $field.
      *
      * @param string $field
-     * @param ValidatorInterface $validator
+     * @param \Zend\Validator\ValidatorInterface $validator
      */
     public function addValidator(string $field, Validator $validator);
 
