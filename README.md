@@ -109,19 +109,19 @@ The above example shows how to do a classic validation for a request containing 
 
 ## Enter Extractors
 
-Extractors are objects whose main purpose is to extract variables from the request and return an array. An Extractor has to implement ´`ExtractorInterface`, whose only requirement is to define two methods:
+Extractors are objects whose main purpose is to extract variables from the request and return an array. An Extractor has to implement `ExtractorInterface`, whose only requirement is to define two methods:
 
 - `extract(Request $request): array`. Given a certain request, an array must be returned with the variables to be processed by the Distiller.
 - `supports(Request $request): bool`. Whether the extractor supports the given request.
 
-This library comes with 4 implementations of the `ExtractorInterface`:
+This library comes with the following implementations of the `ExtractorInterface`:
 
 - `DelOlmo\Extractor\AttributesExtractor`. Extracts the request attributes from the request.
 - `DelOlmo\Extractor\ParsedBodyExtractor`. Extracts the parsed body from the request.
 - `DelOlmo\Extractor\QueryParamsExtractor`. Extracts the query params from the request.
 - `DelOlmo\Extractor\ExtractorChain`. Allows chaining extractors and merges all the extracted data using the \array_merge function.
 
-If no Extractor is passed to the Distiller constructor, the default Extractor used is an `ExtractorChain` following this definition:
+If no Extractor is passed to the Distiller constructor, the default Extractor used is an `ExtractorChain` with the following definition:
 
 ```php
 use DelOlmo\Extractor;
@@ -135,25 +135,36 @@ $extractor->attach(new Extractor\AttributesExtractor());
 return $extractor;
 ```
 
-This means that all query params, body params and request attributes are extracted from the request and passed to the Distiller object for processing.
+This means that all query params, body params and request attributes are extracted from the request and passed to the Distiller object for processing. This also means that validators and filters can apply to all of the above variables at will.
 
-This means that validators and filters can apply to all of the above variables at will.
+Be mindful that the `ExtractorChain` extracts variables sequentially. That is, if a certain variable exist with the same name as an attribute, a body parameter and a query parameter, the first takes precedence from the second, and the second takes precedence from the third. You can alter this behavior by defining your own ExtractorChain and altering the order in which extractors are attached to the chain. For example:
 
-Be mindful that the `ExtractorChain` extracts variables sequentially. That is, if a certain variable exist with the same name as an attribute, a body parameter and a query parameter, the first takes precedence from the second, and the second takes precedence from the third. You can alter this behavior by defining your own ExtractorChain and altering the order in which extractors are attached.
+```php
+use DelOlmo\Extractor;
+
+$customExtractor = new Extractor\ExtractorChain();
+
+$customExtractor->attach(new Extractor\ParsedBodyExtractor());
+$customExtractor->attach(new Extractor\QueryParamsExtractor());
+
+$customDistiller = new \DelOlmo\Distiller\Distiller($request, $customExtractor);
+```
+
+This `$customDistiller` will only process query parameters and body parameters, and query parameters will take precedence from body parameters.
 
 ## Validators, filters and callbacks
 
 Distiller objects leverage the use of validators, filters and callbacks.
 
-The only condition to use a Validator is that it must implement Zend\Validator\ValidatorInterface.
+Validators are objects that return true or false when calling `isValid($value)`. Validators MUST implement `Zend\Validator\ValidatorInterface`. Zend's ValidatorInterface has, by far, one of the [simplest implementations](https://github.com/zendframework/zend-validator/blob/master/src/ValidatorInterface.php) for validating mixed values.
 
-The only condition to use a Filter is that it must implement Zend\Filter\FilterInterface.
+Filters are objects that transform a variable when `filter($value)` is called. Filters MUST implement `Zend\Filter\FilterInterface`. In a similar way to Validators, Zend's FilterInterface has a very [simple definition](https://github.com/zendframework/zend-filter/blob/master/src/FilterInterface.php). Filters will only be used if the request is valid, when calling `$distiller->getData()`. If the request is not valid, an empty array will be returned.
 
-Callbacks have to be valid callables.
+Callbacks are functions that apply to all the variables at once. Callbacks are only called when a request is considered valid and after applying all the Filters. Their only requirement is that they be callables.
 
 ## Organizing your Distiller objects
 
-As you've seen, a Distiller obejct can be created and used directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
+As you've seen, a Distiller obejct can be created and used anywhere, including directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
 
 ```php
 
@@ -225,9 +236,3 @@ class Usercontroller
     }
 }
 ```
-
-
-## Using an Extractor
-
-
-## Creating a custom Extractor
