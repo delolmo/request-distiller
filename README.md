@@ -10,16 +10,16 @@ Powerful, flexible validation and filtering for PSR-7 requests.
 
 Frameworks usually rely on controllers to read information from the HTTP request and return a response. HTTP requests are usually mapped to controller methods by using a Router component. The Router, however, is meant to match the request using url parameters, request methods, request headers, etc. but validation itself of the request is done in the controller.
 
-Consider the following controller:
+Consider the following hypothetical controller:
 
 ```php
-namespace App\controller;
+namespace App\Controller;
 
 use App\Entity\User;
 use Psr\Http\Message\RequestInterface as Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class Usercontroller
+class UserController
 {
     /**
      * @Route('/users/{user-id}')
@@ -105,6 +105,52 @@ $data = $distiller->getData();
 
 ```
 
+The above example shows how to do a classic validation for a request containing form data in the request body. However, Distiller objects can be used for much more.
+
+## Enter Extractors
+
+Extractors are objects whose main purpose is to extract variables from the request and return an array. An Extractor has to implement ´`ExtractorInterface`, whose only requirement is to define two methods:
+
+- `extract(Request $request): array`. Given a certain request, an array must be returned with the variables to be processed by the Distiller.
+- `supports(Request $request): bool`. Whether the extractor supports the given request.
+
+This library comes with 4 implementations of the `ExtractorInterface`:
+
+- `DelOlmo\Extractor\AttributesExtractor`. Extracts the request attributes from the request.
+- `DelOlmo\Extractor\ParsedBodyExtractor`. Extracts the parsed body from the request.
+- `DelOlmo\Extractor\QueryParamsExtractor`. Extracts the query params from the request.
+- `DelOlmo\Extractor\ExtractorChain`. Allows chaining extractors and merges all the extracted data using the \array_merge function.
+
+If no Extractor is passed to the Distiller constructor, the default Extractor used is an `ExtractorChain` following this definition:
+
+```php
+use DelOlmo\Extractor;
+
+$extractor = new Extractor\ExtractorChain();
+
+$extractor->attach(new Extractor\QueryParamsExtractor());
+$extractor->attach(new Extractor\ParsedBodyExtractor());
+$extractor->attach(new Extractor\AttributesExtractor());
+
+return $extractor;
+```
+
+This means that all query params, body params and request attributes are extracted from the request and passed to the Distiller object for processing.
+
+This means that validators and filters can apply to all of the above variables at will.
+
+Be mindful that the `ExtractorChain` extracts variables sequentially. That is, if a certain variable exist with the same name as an attribute, a body parameter and a query parameter, the first takes precedence from the second, and the second takes precedence from the third. You can alter this behavior by defining your own ExtractorChain and altering the order in which extractors are attached.
+
+## Validators, filters and callbacks
+
+Distiller objects leverage the use of validators, filters and callbacks.
+
+The only condition to use a Validator is that it must implement Zend\Validator\ValidatorInterface.
+
+The only condition to use a Filter is that it must implement Zend\Filter\FilterInterface.
+
+Callbacks have to be valid callables.
+
 ## Organizing your Distiller objects
 
 As you've seen, a Distiller obejct can be created and used directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
@@ -127,8 +173,10 @@ use Zend\Validator\NotEmpty;
 
 class ChangeUserEmailDistiller extends Distiller
 {
-    public function __construct(Connection $connection)
+    public function __construct(RquestInterface $request, Connection $connection)
     {
+        parent::__construct($request);
+
         // Validators for the 'credentials' field
         $this->addValidator('credentials', new DenyAccessUnlessGranted(), true);
 
@@ -177,8 +225,6 @@ class Usercontroller
     }
 }
 ```
-
-## Adding validators, filters and callbacks
 
 
 ## Using an Extractor
