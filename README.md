@@ -169,6 +169,7 @@ As you've seen, a Distiller obejct can be created and used anywhere, including d
 ```php
 namespace App\Distiller;
 
+use App\Authorization\Rbac;
 use App\Filter\ToUserEntity;
 use App\Validator\DenyAccessUnlessGranted;
 use App\Validator\UsernameExists;
@@ -183,12 +184,12 @@ use Zend\Validator\NotEmpty;
 
 class ChangeUserEmailDistiller extends Distiller
 {
-    public function __construct(RquestInterface $request, Connection $connection)
+    public function __construct(RequestInterface $request, Connection $connection, Rbac $rbac)
     {
         parent::__construct($request);
 
         // Validators for the 'credentials' field
-        $this->addValidator('credentials', new DenyAccessUnlessGranted(), true);
+        $this->addValidator('credentials', new DenyAccessUnlessGranted($rbac), true);
 
         // Validators for the 'username' field
         $this->addValidator('username', new NotEmpty(), true);
@@ -221,7 +222,8 @@ class Usercontroller
     public function changeUserEmail(Request $request)
     {
         $connection = $this->getContainer()->get('connection');
-        $distiller = new App\Distiller\ChangeUserEmailDistiller($request, $connection);
+        $rbac = $this->getContainer()->get('rbac');
+        $distiller = new App\Distiller\ChangeUserEmailDistiller($request, $connection, $rbac);
 
         if (!$distiller->isValid()) {
             // Redirect, throw a 403 error, etc.
