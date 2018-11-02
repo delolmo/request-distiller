@@ -48,7 +48,7 @@ class UserController
 
 When the application starts to grow and validation logic gets more complex, many controller methods get populated with a considerable amount of repeated code, making the application less maintainable and the code harder to understand.
 
-This library aims at creating an extra layer of logic, sitting between the Router and the controller, to check if the HTTP Request is valid and keep your code organized as your application grows.
+This library aims at creating an extra layer of logic, sitting between the Router and the controller, to check if the HTTP Request is valid and keep your code clean and organized as your application grows.
 
 ## Requirements
 
@@ -167,7 +167,6 @@ Callbacks are functions that apply to all the variables at once. Callbacks are o
 As you've seen, a Distiller obejct can be created and used anywhere, including directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
 
 ```php
-
 namespace App\Distiller;
 
 use App\Filter\ToUserEntity;
@@ -216,12 +215,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class Usercontroller
 {
     /**
-     * @Route('/users/{user-id}')
+     * @Route('/users/{user-id}', 'POST')
      */
-    public function show(Request $request)
+    public function changeUserEmail(Request $request)
     {
         $connection = $this->getContainer()->get('connection');
-        $distiller = new App\Distiller\ChangeUserEmailDistiller($connection);
+        $distiller = new App\Distiller\ChangeUserEmailDistiller($request, $connection);
 
         if (!$distiller->isValid()) {
             // Redirect, throw a 403 error, etc.
@@ -229,9 +228,19 @@ class Usercontroller
 
         $data = $distiller->getData();
 
-        // Do stuff, like showing the user's page
-        return new HtmlResponse($this->render([
-            "user" => $data['user']
+        /* @var $user App\Entity\User */
+        $user = $data['user'];
+
+        // Do stuff, like updating the User entity
+        $user->setEmail($data['email']);
+
+        // Persist the entity using a Data Access Object
+        $dao->persist($user);
+        $dao->flush($user);
+
+        // Redirect upon sucess
+        return new RedirectResponse('/users/{user-id}', [
+            'user-id' => $user->getId()
         ]);
     }
 }
