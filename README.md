@@ -211,6 +211,7 @@ namespace App\controller;
 use App\Entity\User;
 use Psr\Http\Message\RequestInterface as Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Zend\Diactoros\RedirectResponse;
 
 class Usercontroller
 {
