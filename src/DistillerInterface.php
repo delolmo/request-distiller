@@ -25,14 +25,6 @@ interface DistillerInterface
     public function addCallback(callable $callback);
 
     /**
-     * Adds a new error.
-     *
-     * @param string $field
-     * @param string $error
-     */
-    public function addError(string $field, string $error);
-
-    /**
      * Añade una regla de filtrado para el campo $field.
      *
      * @param string $field
