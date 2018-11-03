@@ -33,9 +33,10 @@ class UserController
         // Validate parameters in the request body (i.e. a form submission)
         // Other business logic to check if the request is valid
         // ...
-
         // Until this point, all we did was check that the Request was valid
-        $user = $em->find($userId);
+
+        // Get the user with a Data Access Object
+        $user = $dao->find($userId);
 
         // Only beyond this point, do we begin to consider the normal behavior of the controller
         // Do stuff, like showing the user's page
