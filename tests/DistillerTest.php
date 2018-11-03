@@ -39,14 +39,17 @@ class DistillerTest extends TestCase
     public function testGetErrors()
     {
         $request = (new ServerRequest([], [], '/', 'GET'))
-            ->withQueryParams(['email' => 'invalid'])
-            ->withAttribute('test', '1');
+            ->withAttribute('test', '');
 
         $distiller = (new Distiller($request));
-        $distiller->addValidator('email', new EmailAddress(), true);
+        $distiller->addValidator('test', new NotEmpty(), true);
 
         $distiller->isValid();
-        $this->assertEquals(1, \count($distiller->getErrors()));
+        $errors = $distiller->getErrors();
+        $this->assertEquals(1, \count($errors));
+
+        $error = "test: Value is required and can't be empty";
+        $this->assertEquals($error, $errors[0]);
     }
 
     public function testGetRawData()
