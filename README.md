@@ -162,7 +162,7 @@ This `$customDistiller` will only process query parameters and body parameters, 
 
 Distiller objects leverage the use of validators, filters and callbacks.
 
-Validators are objects that return true or false when calling `isValid($value)`. Validators MUST implement `Zend\Validator\ValidatorInterface`. Zend's ValidatorInterface has, by far, one of the [simplest implementations](https://github.com/zendframework/zend-validator/blob/master/src/ValidatorInterface.php) for validating mixed values.
+Validators are objects that return true or false when calling `isValid($value)`. Validators MUST implement `Zend\Validator\ValidatorInterface`. Zend's ValidatorInterface has one of the [simplest implementations](https://github.com/zendframework/zend-validator/blob/master/src/ValidatorInterface.php) for validating mixed values.
 
 Filters are objects that transform a variable when `filter($value)` is called. Filters MUST implement `Zend\Filter\FilterInterface`. In a similar way to Validators, Zend's FilterInterface has a very [simple definition](https://github.com/zendframework/zend-filter/blob/master/src/FilterInterface.php). Filters will only be used if the request is valid, when calling `$distiller->getData()`. If the request is not valid, an empty array will be returned.
 
