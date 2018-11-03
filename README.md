@@ -97,7 +97,12 @@ $distiller->addFilter('name', new StringTrim());
 $distiller->addFilter('type', new ToInt());
 
 if (!$distiller->isValid()) {
-    // Do something, like a redirect
+    // Handle errors
+    $errors = $distiller->getErrors();
+    $this->addFlash('error', $errors);
+
+    // Do more stuff, like redirecting the user
+    return new RedirectResponse('/');
 }
 
 // Will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
