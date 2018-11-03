@@ -22,7 +22,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController
 {
     /**
-     * @Route('/users/{user-id}')
+     * @Route("/users/{user-id}")
      */
     public function show(Request $request)
     {
@@ -221,7 +221,7 @@ use Zend\Diactoros\RedirectResponse;
 class UserController
 {
     /**
-     * @Route('/users/{user-id}', 'POST')
+     * @Route("/users/{user-id}", methods={"POST"})
      */
     public function changeUserEmail(Request $request)
     {
