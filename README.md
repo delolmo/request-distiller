@@ -90,9 +90,9 @@ use Zend\Validator\NotEmpty;
 
 $distiller = new \DelOlmo\Distiller\Distiller($request);
 
-$distiller->addValidator('email', new EmailAddress(), true);
-$distiller->addValidator('name', new NotEmpty(), true);
-$distiller->addValidator('type', new Digits(), true);
+$distiller->addValidator('email', new EmailAddress());
+$distiller->addValidator('name', new NotEmpty());
+$distiller->addValidator('type', new Digits());
 $distiller->addFilter('name', new StringTrim());
 $distiller->addFilter('type', new ToInt());
 
@@ -189,15 +189,15 @@ class ChangeUserEmailDistiller extends Distiller
         parent::__construct($request);
 
         // Validators for the 'credentials' field
-        $this->addValidator('credentials', new DenyAccessUnlessGranted($rbac), true);
+        $this->addValidator('credentials', new DenyAccessUnlessGranted($rbac));
 
         // Validators for the 'username' field
-        $this->addValidator('username', new NotEmpty(), true);
-        $this->addValidator('username', new UsernameExists($connection), true);
+        $this->addValidator('username', new NotEmpty());
+        $this->addValidator('username', new UsernameExists($connection));
 
         // Validators for the 'email' field
-        $this->addValidator('email', new NotEmpty(), true);
-        $this->addValidator('email', new EmailAddress(), true);
+        $this->addValidator('email', new NotEmpty());
+        $this->addValidator('email', new EmailAddress());
     }
 }
 
