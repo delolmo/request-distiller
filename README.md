@@ -210,14 +210,14 @@ This new class contains all the directions needed to validate the HTTP request. 
 
 
 ```php
-namespace App\controller;
+namespace App\Controller;
 
 use App\Entity\User;
 use Psr\Http\Message\RequestInterface as Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Zend\Diactoros\RedirectResponse;
 
-class Usercontroller
+class UserController
 {
     /**
      * @Route('/users/{user-id}', 'POST')
