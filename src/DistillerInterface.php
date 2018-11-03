@@ -25,7 +25,7 @@ interface DistillerInterface
     public function addCallback(callable $callback);
 
     /**
-     * Añade una regla de filtrado para el campo $field.
+     * Adds a new filter to the specified field.
      *
      * @param string $field
      * @param \Zend\Filter\FilterInterface $filter
