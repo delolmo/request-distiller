@@ -78,7 +78,7 @@ class Distiller implements DistillerInterface
     /**
      * {@inheritdoc}
      */
-    public function addError(string $field, string $error)
+    protected function addError(string $field, string $error)
     {
         $this->errors[] = $field . ': ' . $error;
     }
