@@ -245,7 +245,7 @@ class UserController
         $dao->persist($user);
         $dao->flush($user);
 
-        // Redirect upon sucess
+        // Redirect upon success
         return new RedirectResponse('/users/{user-id}', [
             'user-id' => $user->getId()
         ]);
