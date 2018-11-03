@@ -181,9 +181,6 @@ use App\Validator\UsernameExists;
 use DelOlmo\Distiller\Distiller;
 use Doctrine\DBAL\Connection;
 use Psr\Http\Message\RequestInterface;
-use Zend\Filter\StringTrim;
-use Zend\Filter\ToInt;
-use Zend\Validator\Digits;
 use Zend\Validator\EmailAddress;
 use Zend\Validator\NotEmpty;
 
@@ -196,9 +193,10 @@ class ChangeUserEmailDistiller extends Distiller
         // Validators for the 'credentials' field
         $this->addValidator('credentials', new DenyAccessUnlessGranted($rbac));
 
-        // Validators for the 'username' field
-        $this->addValidator('username', new NotEmpty());
-        $this->addValidator('username', new UsernameExists($connection));
+        // Validators for the 'user' field
+        $this->addValidator('user', new NotEmpty());
+        $this->addValidator('user', new UsernameExists($connection));
+        $this->addFilter('user', new ToUserEntity());
 
         // Validators for the 'email' field
         $this->addValidator('email', new NotEmpty());
