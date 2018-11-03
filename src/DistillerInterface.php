@@ -8,8 +8,8 @@ use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorInterface as Validator;
 
 /**
- * Una sencilla interfaz para validar, añadir reglas de validacion y filtrar los
- * valores de una petición HTTP.
+ * A simple interface to validate, add validation rules and filter HTTP
+ * requests.
  *
  * @author Antonio del Olmo García <adelolmog@gmail.com>
  */
@@ -17,13 +17,15 @@ interface DistillerInterface
 {
 
     /**
-     * Añade una función que se ejecuta después de realizar la validación y el
-     * filtrado de las variables. Se le pasa como único argumento el vector de
-     * datos ya filtrado.
+     * Adds a callable that will be executed after validating the request and
+     * filtering all the fields.
+     *
+     * Callables receive the filtered data as the only argument.
      */
     public function addCallback(callable $callback);
 
     /**
+     * Adds a new error.
      *
      * @param string $field
      * @param string $error
@@ -39,7 +41,7 @@ interface DistillerInterface
     public function addFilter(string $field, Filter $filter);
 
     /**
-     * Añade una regla de validación para el campo $field.
+     * Adds a new validation rule to the specified field.
      *
      * @param string $field
      * @param \Zend\Validator\ValidatorInterface $validator
@@ -47,8 +49,8 @@ interface DistillerInterface
     public function addValidator(string $field, Validator $validator);
 
     /**
-     * Devuelve un array asociativo cuyas claves son los nombres de los campos
-     * y los valores son los valores, validados y filtrados, de los campos.
+     * Returns an associative array with the request data, with the key being
+     * the name of the field and the value being the filtered field value.
      *
      * @return array
      * @throws \DelOlmo\Distiller\Exception\InvalidRequestException if the
@@ -57,23 +59,22 @@ interface DistillerInterface
     public function getData(): array;
 
     /**
-     * Devuelve todos los errores de validación de la petición HTTP.
+     * Returns all the validation errors from the HTTP request.
      *
      * @return array
      */
     public function getErrors(): array;
 
     /**
-     * Devuelve un array asociativo cuyas claves son los nombres de los campos
-     * y los valores son los valores, sin validar ni filtrar, de los campos.
+     * Returns an associative array with the request data, before validation
+     * and filtering.
      *
      * @return array
      */
     public function getRawData(): array;
 
     /**
-     * Devuelve vedadero si la petición HTTP es válida o falso en caso
-     * contrario. La petición se valida una única vez.
+     * Returns true if the HTTP is valid, or false otherwise.
      *
      * @return bool
      */
