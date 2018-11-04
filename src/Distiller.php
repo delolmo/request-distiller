@@ -213,7 +213,7 @@ class Distiller implements DistillerInterface
      *
      * @return \DelOlmo\Distiller\Extractor\ExtractorInterface
      */
-    public static function createDefaultExtractor(): ExtractorInterface
+    protected static function createDefaultExtractor(): ExtractorInterface
     {
         $extractor = new Extractor\ExtractorChain();
 
@@ -229,7 +229,7 @@ class Distiller implements DistillerInterface
      *
      * @return \DelOlmo\Distiller\Error\ErrorFactoryInterface
      */
-    public static function createDefaultErrorFactory(): ErrorFactoryInterface
+    protected static function createDefaultErrorFactory(): ErrorFactoryInterface
     {
         return new ErrorFactory();
     }
