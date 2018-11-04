@@ -66,7 +66,7 @@ interface DistillerInterface
     public function getRawData(): array;
 
     /**
-     * Returns true if the HTTP is valid, or false otherwise.
+     * Returns true if the request is valid, or false otherwise.
      *
      * @return bool
      */
