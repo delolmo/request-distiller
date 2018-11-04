@@ -24,7 +24,7 @@ class Distiller implements DistillerInterface
     protected $callbacks = [];
 
     /**
-     * @var \DelOlmo\Distiller\ExtractorInterface
+     * @var \DelOlmo\Distiller\Extractor\ExtractorInterface
      */
     protected $extractor;
 
@@ -57,7 +57,7 @@ class Distiller implements DistillerInterface
      * Constructor
      *
      * @param \Psr\Http\Message\RequestInterface $request
-     * @param \DelOlmo\Distiller\ExtractorInterface $extractor
+     * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
      */
     public function __construct(
         RequestInterface $request,
