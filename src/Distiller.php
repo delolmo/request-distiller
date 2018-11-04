@@ -209,7 +209,7 @@ class Distiller implements DistillerInterface
      *
      * @return \DelOlmo\Distiller\Extractor\ExtractorInterface
      */
-    public static function createDefaultExtractor(): ExtractorInterface
+    protected static function createDefaultExtractor(): ExtractorInterface
     {
         $extractor = new Extractor\ExtractorChain();
 
