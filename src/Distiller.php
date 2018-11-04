@@ -34,7 +34,7 @@ class Distiller implements DistillerInterface
     protected $filters = [];
 
     /**
-     * @var string[]
+     * @var \DelOlmo\Distiller\ErrorInterface[]
      */
     protected $errors = [];
 
@@ -78,9 +78,9 @@ class Distiller implements DistillerInterface
     /**
      * {@inheritdoc}
      */
-    protected function addError(string $field, string $error)
+    protected function addError(ErrorInterface $error)
     {
-        $this->errors[] = $field . ': ' . $error;
+        $this->errors[] = $error;
     }
 
     /**
@@ -199,7 +199,8 @@ class Distiller implements DistillerInterface
 
             // Else generate and save all validation errors
             foreach ($validator->getMessages() as $message) {
-                $this->addError($field, $message);
+                $error = new Error($field, $message, $validator, $value);
+                $this->addError($error);
             }
         }
     }
