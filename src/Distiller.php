@@ -31,7 +31,7 @@ class Distiller implements DistillerInterface
     protected $extractor;
 
     /**
-     * @var \DelOlmo\Distiller\ErrorFactoryInterface
+     * @var \DelOlmo\Distiller\Error\ErrorFactoryInterface
      */
     protected $errorFactory;
 
@@ -41,7 +41,7 @@ class Distiller implements DistillerInterface
     protected $filters = [];
 
     /**
-     * @var \DelOlmo\Distiller\ErrorInterface[]
+     * @var \DelOlmo\Distiller\Error\ErrorInterface[]
      */
     protected $errors = [];
 
@@ -65,7 +65,7 @@ class Distiller implements DistillerInterface
      *
      * @param \Psr\Http\Message\RequestInterface $request
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
-     * @param \DelOlmo\Distiller\ErrorFactorInterface $errorFactory
+     * @param \DelOlmo\Distiller\Error\ErrorFactorInterface $errorFactory
      */
     public function __construct(
         RequestInterface $request,
@@ -227,7 +227,7 @@ class Distiller implements DistillerInterface
     /**
      * Creates a default ErrorFactor implementation.
      *
-     * @return \DelOlmo\Distiller\ErrorFactoryInterface
+     * @return \DelOlmo\Distiller\Error\ErrorFactoryInterface
      */
     public static function createDefaultErrorFactory(): ErrorFactoryInterface
     {

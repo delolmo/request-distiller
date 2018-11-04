@@ -21,7 +21,7 @@ interface ErrorFactoryInterface
      * @param string $message
      * @param \Zend\Validator\ValidatorInterface $validator
      * @param mixed $value
-     * @return \DelOlmo\Distiller\ErrorInterface
+     * @return \DelOlmo\Distiller\Error\ErrorInterface
      */
     public function create(
         string $field,
