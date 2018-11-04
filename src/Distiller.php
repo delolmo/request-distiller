@@ -29,6 +29,11 @@ class Distiller implements DistillerInterface
     protected $extractor;
 
     /**
+     * @var \DelOlmo\Distiller\ErrorFactoryInterface
+     */
+    protected $errorFactory;
+
+    /**
      * @var \Zend\Filter\FilterInterface[]
      */
     protected $filters = [];
@@ -58,11 +63,14 @@ class Distiller implements DistillerInterface
      *
      * @param \Psr\Http\Message\RequestInterface $request
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
+     * @param \DelOlmo\Distiller\ErrorFactorInterface $errorFactory
      */
     public function __construct(
         RequestInterface $request,
-        ExtractorInterface $extractor = null
+        ExtractorInterface $extractor = null,
+        ErrorFactoryInterface $errorFactory = null
     ) {
+        $this->errorFactory = $errorFactory ?? self::createDefaultErrorFactory();
         $this->extractor = $extractor ?? self::createDefaultExtractor();
         $this->request = $request;
     }
@@ -73,14 +81,6 @@ class Distiller implements DistillerInterface
     public function addCallback(callable $callback)
     {
         $this->callbacks[] = $callback;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function addError(ErrorInterface $error)
-    {
-        $this->errors[] = $error;
     }
 
     /**
@@ -200,7 +200,7 @@ class Distiller implements DistillerInterface
             // Else generate and save all validation errors
             foreach ($validator->getMessages() as $message) {
                 $error = new Error($field, $message, $validator, $value);
-                $this->addError($error);
+                $this->errors[] = $error;
             }
         }
     }
@@ -219,5 +219,15 @@ class Distiller implements DistillerInterface
         $extractor->attach(new Extractor\AttributesExtractor());
 
         return $extractor;
+    }
+
+    /**
+     * Creates a default ErrorFactor implementation.
+     *
+     * @return \DelOlmo\Distiller\ErrorFactoryInterface
+     */
+    public static function createDefaultErrorFactory(): ErrorFactoryInterface
+    {
+        return new ErrorFactory();
     }
 }
