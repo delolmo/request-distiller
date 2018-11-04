@@ -199,7 +199,8 @@ class Distiller implements DistillerInterface
 
             // Else generate and save all validation errors
             foreach ($validator->getMessages() as $message) {
-                $error = new Error($field, $message, $validator, $value);
+                $error = $this->errorFactory
+                    ->create($field, $message, $validator, $value);
                 $this->errors[] = $error;
             }
         }
