@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DelOlmo\Distiller;
+namespace DelOlmo\Distiller\Error;
 
 use PHPUnit\Framework\TestCase;
 use Zend\Validator\NotEmpty;
@@ -13,7 +13,7 @@ use Zend\Validator\NotEmpty;
 class ErrorTest extends TestCase
 {
     /**
-     * @var \DelOlmo\Distiller\Error
+     * @var \DelOlmo\Distiller\Error\Error
      */
     protected $error;
 

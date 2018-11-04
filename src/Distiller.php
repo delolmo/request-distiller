@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DelOlmo\Distiller;
 
+use DelOlmo\Distiller\Error\ErrorFactory;
+use DelOlmo\Distiller\Error\ErrorFactoryInterface;
 use DelOlmo\Distiller\Exception\InvalidRequestException;
 use DelOlmo\Distiller\Extractor\ExtractorInterface;
 use Psr\Http\Message\RequestInterface;

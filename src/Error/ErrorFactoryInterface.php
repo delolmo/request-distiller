@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DelOlmo\Distiller;
+namespace DelOlmo\Distiller\Error;
 
-use DelOlmo\Distiller\ErrorInterface;
+use DelOlmo\Distiller\Error\ErrorInterface;
 use Zend\Validator\ValidatorInterface;
 
 /**
