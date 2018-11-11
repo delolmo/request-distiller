@@ -12,8 +12,8 @@ class DtoFactory implements DtoFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create(): DtoInterface
+    public function create(array $data = []): DtoInterface
     {
-        return new Dto();
+        return new Dto($data);
     }
 }

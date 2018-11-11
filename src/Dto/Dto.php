@@ -16,6 +16,16 @@ class Dto implements DtoInterface
     protected $data = [];
 
     /**
+     * Constructor
+     *
+     * @param array $data
+     */
+    public function __construct(array $data = [])
+    {
+        $this->data = $data;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function offsetExists($offset)
