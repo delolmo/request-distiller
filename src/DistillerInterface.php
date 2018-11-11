@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DelOlmo\Distiller;
 
+use DelOlmo\Distiller\Dto\DtoInterface;
 use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorInterface as Validator;
 
@@ -44,11 +45,11 @@ interface DistillerInterface
      * Returns an associative array with the request data, with the key being
      * the name of the field and the value being the filtered field value.
      *
-     * @return array
+     * @return \DelOlmo\Distiller\Dto\DtoInterface
      * @throws \DelOlmo\Distiller\Exception\InvalidRequestException if the
      * request is not valid
      */
-    public function getData(): array;
+    public function getData(): DtoInterface;
 
     /**
      * Returns all the validation errors from the HTTP request.

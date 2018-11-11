@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DelOlmo\Distiller;
 
+use DelOlmo\Distiller\Dto\DtoFactory;
+use DelOlmo\Distiller\Dto\DtoFactoryInterface;
+use DelOlmo\Distiller\Dto\DtoInterface;
 use DelOlmo\Distiller\Error\ErrorFactory;
 use DelOlmo\Distiller\Error\ErrorFactoryInterface;
 use DelOlmo\Distiller\Exception\InvalidRequestException;
@@ -24,6 +27,11 @@ class Distiller implements DistillerInterface
      * @var callable[]
      */
     protected $callbacks = [];
+
+    /**
+     * @var \DelOlmo\Distiller\Dto\DtoFactoryInterface
+     */
+    protected $dtoFactory;
 
     /**
      * @var \DelOlmo\Distiller\Extractor\ExtractorInterface
@@ -65,13 +73,16 @@ class Distiller implements DistillerInterface
      *
      * @param \Psr\Http\Message\RequestInterface $request
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
-     * @param \DelOlmo\Distiller\Error\ErrorFactorInterface $errorFactory
+     * @param \DelOlmo\Distiller\Error\ErrorFactoryInterface $errorFactory
+     * @param \DelOlmo\Distiller\Dto\DtoFactoryInterface $dtoFactory
      */
     public function __construct(
         RequestInterface $request,
         ExtractorInterface $extractor = null,
-        ErrorFactoryInterface $errorFactory = null
+        ErrorFactoryInterface $errorFactory = null,
+        DtoFactoryInterface $dtoFactory = null
     ) {
+        $this->dtoFactory = $dtoFactory ?? self::createDefaultDtoFactory();
         $this->errorFactory = $errorFactory ?? self::createDefaultErrorFactory();
         $this->extractor = $extractor ?? self::createDefaultExtractor();
         $this->request = $request;
@@ -122,14 +133,14 @@ class Distiller implements DistillerInterface
     /**
      * {@inheritdoc}
      */
-    public function getData(): array
+    public function getData(): DtoInterface
     {
         if (!$this->isValid()) {
             throw new InvalidRequestException();
         }
 
-        // Empty array to begin with
-        $data = [];
+        // Create the Data Transfer Object
+        $data = $this->dtoFactory->create();
 
         // The raw data, extracted from the request
         $rawData = $this->getRawData();
@@ -206,6 +217,16 @@ class Distiller implements DistillerInterface
                 $this->errors[] = $error;
             }
         }
+    }
+
+    /**
+     * Creates a default DtoFactory implementation.
+     *
+     * @return \DelOlmo\Distiller\Dto\DtoFactoryInterface
+     */
+    protected static function createDefaultDtoFactory(): DtoFactoryInterface
+    {
+        return new DtoFactory();
     }
 
     /**

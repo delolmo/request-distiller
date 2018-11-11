@@ -28,12 +28,17 @@ class DistillerTest extends TestCase
         $distiller = (new Distiller($request));
         $distiller->addFilter('email', new StringToUpper());
         $distiller->addFilter('test', new ToInt());
-        $distiller->addCallback(function (array $data) {
+        $distiller->addCallback(function (\ArrayAccess $data) {
             $data['foo'] = 'bar';
             return $data;
         });
 
-        $this->assertEquals(['email' => 'LOCALHOST@LOCALHOST.COM', 'test' => 1, 'foo' => 'bar'], $distiller->getData());
+        $expected = ['email' => 'LOCALHOST@LOCALHOST.COM', 'test' => 1, 'foo' => 'bar'];
+        $result = $distiller->getData()->toArray();
+        $this->assertEquals($expected['email'], $distiller->getData()['email']);
+        $this->assertEquals($expected['test'], $distiller->getData()['test']);
+        $this->assertEquals($expected['foo'], $distiller->getData()['foo']);
+        $this->assertEquals($expected, $result);
     }
 
     public function testGetErrors()
