@@ -126,6 +126,7 @@ Extractors are objects whose main purpose is to extract variables from the reque
 This library comes with the following implementations of the `ExtractorInterface`:
 
 - `DelOlmo\Extractor\AttributesExtractor`. Extracts the request attributes from the request.
+- `DelOlmo\Extractor\HeadersExtractor`. Extracts the headers from the request.
 - `DelOlmo\Extractor\ParsedBodyExtractor`. Extracts the parsed body from the request.
 - `DelOlmo\Extractor\QueryParamsExtractor`. Extracts the query params from the request.
 - `DelOlmo\Extractor\ExtractorChain`. Allows chaining extractors and merges all the extracted data using the \array_merge function.
