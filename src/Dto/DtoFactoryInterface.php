@@ -16,5 +16,5 @@ interface DtoFactoryInterface
      *
      * @return \DelOlmo\Distiller\Dto\DtoInterface
      */
-    public function create(): DtoInterface;
+    public function create(array $data = []): DtoInterface;
 }
