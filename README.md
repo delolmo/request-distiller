@@ -269,3 +269,5 @@ All `Error` objects must implement `Error\ErrorInterface`.
 To allow further flexibility, the `getData` method of the `Distiller` object returns Data Transfer Objects. Data Transfer Objects are objects that implement `Dto\DtoInterface`, which in turn implements `\ArrayAccess`. This means that the returned value from `getData` can be accessed like an array, but it can also be made to hold any custom behavior that you want it to have.
 
 In order for `Distiller` objects to know how to create `Dto` objects, a `DtoFactoryInterface` object must be passed to the constructor. When none is passed, the default `Dto\DtoFactory` will be created.
+
+> A note on callbacks: when adding a callback to the `Distiller`, the callback can be tweaked to modify the existing DTO, create a new one or even return a completely different type of variable. It will be up to your custom implementation of the `Distiller` and the callbacks you add to it, to make sense of that the output of `getData`.
