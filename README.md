@@ -169,7 +169,7 @@ Validators are objects that return true or false when calling `isValid($value)`.
 
 Filters are objects that transform a variable when `filter($value)` is called. Filters MUST implement `Zend\Filter\FilterInterface`. In a similar way to Validators, Zend's FilterInterface has a very [simple definition](https://github.com/zendframework/zend-filter/blob/master/src/FilterInterface.php). Filters will only be used if the request is valid, when calling `$distiller->getData()`. If the request is not valid, an empty array will be returned.
 
-Callbacks are functions that apply to all the variables at once. Callbacks are only called when a request is considered valid and after applying all the Filters. Their only requirement is that they be callables.
+Callbacks are functions that apply to all the variables at once. Callbacks are only called when a request is considered valid and after applying all the Filters. Their only requirement is that they be callables. Callbacks receive the Data Transfer Object as their one and only argument and should return the modified Data Transfer Object.
 
 ## Organizing your Distiller objects
 
@@ -211,7 +211,6 @@ class ChangeUserEmailDistiller extends Distiller
 ```
 
 This new class contains all the directions needed to validate the HTTP request. It can be used to validate the request in the controller:
-
 
 ```php
 namespace App\Controller;
@@ -256,6 +255,15 @@ class UserController
     }
 }
 ```
+
+## Error objects
+
+When calling `getErrors` on the `Distiller` object, an array of `ErrorInterface` objects will be returned. Errors are created internally in the `Distiller` using an `ErrorFactoryInterface` object, which can be customized by passing it to the `Distiller` constructor. If none is passed, the default `Error\ErrorFactory` will be created.
+
+An `ErrorFactoryInterface` allows customizing the way errors are created on runtime. For example, you may wish for each validation error to create a different `ErrorInterface` object. You may afterwards react differently to each type of error (redirect to a 404 page, show a 403 page, save a flash message to the session, etc.).
+
+All `Error` objects must implement `Error\ErrorInterface`.
+
 ## Data Transfer Objects
 
 To allow further flexibility, the `getData` method of the `Distiller` object returns Data Transfer Objects. Data Transfer Objects are objects that implement `Dto\DtoInterface`, which in turn implements `\ArrayAccess`. This means that the returned value from `getData` can be accessed like an array, but it can also be made to hold any custom behavior that you want it to have.
