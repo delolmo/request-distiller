@@ -106,8 +106,11 @@ if (!$distiller->isValid()) {
     return new RedirectResponse('/');
 }
 
-// Will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
+// Will return a [Data Transfer Object](##data-transfer-objects)
 $data = $distiller->getData();
+
+// Will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
+var_dump($data->toArray());
 
 ```
 
@@ -170,7 +173,7 @@ Callbacks are functions that apply to all the variables at once. Callbacks are o
 
 ## Organizing your Distiller objects
 
-As you've seen, a Distiller obejct can be created and used anywhere, including directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
+As you've seen, a Distiller object can be created and used anywhere, including directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
 
 ```php
 namespace App\Distiller;
@@ -233,6 +236,7 @@ class UserController
             // Redirect, throw a 403 error, etc.
         }
 
+        /* @var $data DelOlmo\Distiller\Dto\DtoInterface */
         $data = $distiller->getData();
 
         /* @var $user App\Entity\User */
@@ -252,3 +256,8 @@ class UserController
     }
 }
 ```
+## Data Transfer Objects
+
+To allow further flexibility, the `getData` method of the `Distiller` object returns Data Transfer Objects. Data Transfer Objects are objects that implement `Dto\DtoInterface`, which in turn implements `\ArrayAccess`. This means that the returned value from `getData` can be accessed like an array, but it can also be made to hold any custom behavior that you want it to have.
+
+In order for `Distiller` objects to know how to create `Dto` objects, a `DtoFactoryInterface` object must be passed to the constructor. When none is passed, the default `Dto\DtoFactory` will be created.
