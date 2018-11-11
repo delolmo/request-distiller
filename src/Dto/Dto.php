@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DelOlmo\Distiller\Dto;
 
 /**
+ * A Data Transfer Object that encapsulates PHP's native array.
+ *
  * @author Antonio del Olmo García <adelolmog@gmail.com>
  */
 class Dto implements DtoInterface
