@@ -106,7 +106,7 @@ if (!$distiller->isValid()) {
     return new RedirectResponse('/');
 }
 
-// Will return a [Data Transfer Object](##data-transfer-objects)
+// Will return a Data Transfer Object (further reading below)
 $data = $distiller->getData();
 
 // Will return array('email' => 'localhost@localhost.com', 'name' => 'John Doe', 'type' => 1);
