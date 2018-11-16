@@ -18,12 +18,12 @@
     },
     "autoload": {
         "psr-4": {
-            "DelOlmo\\Distiller\\": "src/"
+            "DelOlmo\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "DelOlmo\\Distiller\\": "tests/"
+            "DelOlmo\\": "tests/"
         }
     },
     "require": {
