@@ -9,5 +9,4 @@ namespace DelOlmo\Middleware;
  */
 class DistillerMiddlewareTest
 {
-
 }
