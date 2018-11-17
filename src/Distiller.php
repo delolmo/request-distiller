@@ -99,35 +99,29 @@ class Distiller implements DistillerInterface
     /**
      * {@inheritdoc}
      */
-    public function addFilter(string $field, Filter $filter, ...$args)
+    public function addFilter(string $field, Filter $filter)
     {
         // If the filter is not an instance of FilterChain, create it
         if (empty($this->filters[$field])) {
             $this->filters[$field] = new FilterChain();
         }
 
-        // Arguments to call the 'attach' method in the filter chain
-        \array_unshift($args, $filter);
-
         // Add the new filter to the filter chain
-        \call_user_func_array([$this->filters[$field], 'attach'], $args);
+        \call_user_func([$this->filters[$field], 'attach'], $filter);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addValidator(string $field, Validator $validator, ...$args)
+    public function addValidator(string $field, Validator $validator)
     {
         // If the validator is not an instance of ValidatorChain, create it
         if (empty($this->validators[$field])) {
             $this->validators[$field] = new ValidatorChain();
         }
 
-        // Arguments to call the 'attach' method in the validator chain
-        \array_unshift($args, $validator);
-
         // Add the new validator to the validator chain
-        \call_user_func_array([$this->validators[$field], 'attach'], $args);
+        \call_user_func([$this->validators[$field], 'attach'], $validator);
     }
 
     /**
