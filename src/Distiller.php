@@ -206,7 +206,7 @@ class Distiller implements DistillerInterface
 
             // If everything is correct, jump to next field
             if (empty($validator) ||
-                $validator->isValid($value, $this->getRawData())) {
+                $validator->isValid($value)) {
                 continue;
             }
 
