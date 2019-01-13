@@ -23,17 +23,27 @@ class DistillerTest extends TestCase
     {
         $request = (new ServerRequest([], [], '/', 'GET'))
             ->withQueryParams(['email' => 'localhost@localhost.com'])
-            ->withAttribute('test', '1');
+            ->withAttribute('test', '1')
+            ->withAttribute('array', ['option1' => '1'])
+            ->withAttribute('list', ['2', 'foo']);
 
         $distiller = (new Distiller($request));
         $distiller->addFilter('email', new StringToUpper());
         $distiller->addFilter('test', new ToInt());
+        $distiller->addFilter('array.option1', new ToInt());
+        $distiller->addFilter('list.0', new ToInt());
         $distiller->addCallback(function (\ArrayAccess $data) {
             $data['foo'] = 'bar';
             return $data;
         });
 
-        $expected = ['email' => 'LOCALHOST@LOCALHOST.COM', 'test' => 1, 'foo' => 'bar'];
+        $expected = [
+            'email' => 'LOCALHOST@LOCALHOST.COM',
+            'test' => 1,
+            'foo' => 'bar',
+            'array' => ['option1' => 1],
+            'list' => [2, 'foo']
+        ];
         $result = $distiller->getData()->toArray();
         $this->assertEquals($expected['email'], $distiller->getData()['email']);
         $this->assertEquals($expected['test'], $distiller->getData()['test']);
@@ -59,14 +69,39 @@ class DistillerTest extends TestCase
 
     public function testGetRawData()
     {
-        $request = (new ServerRequest([], [], '/', 'POST'))
+        // Test unidimensional array
+        $request1 = (new ServerRequest([], [], '/', 'POST'))
             ->withQueryParams(['john' => 'doe'])
             ->withParsedBody(['foo' => 'bar'])
             ->withAttribute('test', 'value');
 
-        $distiller = (new Distiller($request));
+        $distiller1 = (new Distiller($request1));
 
-        $this->assertEquals(['john' => 'doe', 'foo' => 'bar', 'test' => 'value'], $distiller->getRawData());
+        $this->assertEquals(
+            [
+                'john' => 'doe',
+                'foo' => 'bar',
+                'test' => 'value'
+            ],
+            $distiller1->getRawData()
+        );
+
+        // Test multidimensional array
+        $request2 = (new ServerRequest([], [], '/', 'POST'))
+            ->withQueryParams(['john' => 'doe'])
+            ->withParsedBody(['foo' => ['bar', 'baz']])
+            ->withAttribute('test', 'value');
+
+        $distiller2 = (new Distiller($request2));
+
+        $this->assertEquals(
+            [
+                'john' => 'doe',
+                'foo' => ['bar', 'baz'],
+                'test' => 'value'
+            ],
+            $distiller2->getRawData()
+        );
     }
 
     public function testIsValid()
