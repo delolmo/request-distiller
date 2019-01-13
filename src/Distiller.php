@@ -152,7 +152,10 @@ class Distiller implements DistillerInterface
         }
 
         // Return resulting data
-        return $data;
+        return $this->dtoFactory
+            ->create(
+                self::arrayExpand($data->toArray())
+            );
     }
 
     /**
@@ -168,7 +171,7 @@ class Distiller implements DistillerInterface
      */
     public function getRawData(): array
     {
-        return self::arrayFlatten(
+        return self::arrayCompress(
             $this->extractor->extract($this->request)
         );
     }
@@ -216,6 +219,54 @@ class Distiller implements DistillerInterface
     }
 
     /**
+     * Transforms a multidimensional array to a single array with string keys
+     * in dot notation.
+     *
+     * @param array $array
+     * @param string $prefix
+     */
+    protected static function arrayCompress(array $array, string $prefix = ''): array
+    {
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = $result + self::arrayFlatten($value, $prefix . $key . '.');
+            } else {
+                $result[$prefix.$key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Transform an array with string keys in dot notation to a multidimesional
+     * array.
+     *
+     * @param array $array
+     * @return array
+     */
+    protected static function arrayExpand(array $array): array
+    {
+        $newArray = array();
+        foreach ($array as $key => $value) {
+            $dots = explode(".", $key);
+            if (count($dots) > 1) {
+                $last = &$newArray[ $dots[0] ];
+                foreach ($dots as $k => $dot) {
+                    if ($k == 0) {
+                        continue;
+                    }
+                    $last = &$last[$dot];
+                }
+                $last = $value;
+            } else {
+                $newArray[$key] = $value;
+            }
+        }
+        return $newArray;
+    }
+
+    /**
      * Creates a default DtoFactory implementation.
      *
      * @return \DelOlmo\Distiller\Dto\DtoFactoryInterface
@@ -249,25 +300,5 @@ class Distiller implements DistillerInterface
     protected static function createDefaultErrorFactory(): ErrorFactoryInterface
     {
         return new ErrorFactory();
-    }
-
-    /**
-     * Transforms a multidimensional array to a single array with string keys
-     * with dot notation.
-     *
-     * @param array $array
-     * @param string $prefix
-     */
-    protected static function arrayFlatten(array $array, string $prefix = ''): array
-    {
-        $result = array();
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $result = $result + self::arrayFlatten($value, $prefix . $key . '.');
-            } else {
-                $result[$prefix.$key] = $value;
-            }
-        }
-        return $result;
     }
 }
