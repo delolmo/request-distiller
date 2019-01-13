@@ -168,7 +168,9 @@ class Distiller implements DistillerInterface
      */
     public function getRawData(): array
     {
-        return $this->extractor->extract($this->request);
+        return self::arrayFlatten(
+            $this->extractor->extract($this->request)
+        );
     }
 
     /**
@@ -247,5 +249,25 @@ class Distiller implements DistillerInterface
     protected static function createDefaultErrorFactory(): ErrorFactoryInterface
     {
         return new ErrorFactory();
+    }
+
+    /**
+     * Transforms a multidimensional array to a single array with string keys
+     * with dot notation.
+     *
+     * @param array $array
+     * @param string $prefix
+     */
+    protected static function arrayFlatten(array $array, string $prefix = ''): array
+    {
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = $result + self::arrayFlatten($value, $prefix . $key . '.');
+            } else {
+                $result[$prefix.$key] = $value;
+            }
+        }
+        return $result;
     }
 }
