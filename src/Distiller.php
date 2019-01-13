@@ -137,7 +137,9 @@ class Distiller implements DistillerInterface
         $data = $this->dtoFactory->create();
 
         // The raw data, extracted from the request
-        $rawData = $this->getRawData();
+        $rawData = self::arrayCompress(
+            $this->getRawData()
+        );
 
         // Filter raw values
         foreach ($rawData as $field => $value) {
@@ -171,9 +173,7 @@ class Distiller implements DistillerInterface
      */
     public function getRawData(): array
     {
-        return self::arrayCompress(
-            $this->extractor->extract($this->request)
-        );
+        return $this->extractor->extract($this->request);
     }
 
     /**
