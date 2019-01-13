@@ -230,7 +230,7 @@ class Distiller implements DistillerInterface
         $result = array();
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                $result = $result + self::arrayFlatten($value, $prefix . $key . '.');
+                $result = $result + self::arrayCompress($value, $prefix . $key . '.');
             } else {
                 $result[$prefix.$key] = $value;
             }
