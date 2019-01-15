@@ -197,7 +197,9 @@ class Distiller implements DistillerInterface
     protected function validate()
     {
         // Get raw data
-        $rawData = $this->getRawData();
+        $rawData = self::arrayCompress(
+            $this->getRawData()
+        );
 
         foreach ($this->validators as $field => $validator) {
             // The field's value
