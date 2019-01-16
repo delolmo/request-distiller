@@ -357,6 +357,7 @@ class Distiller implements DistillerInterface
         $matches = [];
 
         $pattern = \str_replace("[]", ".{[0-9]*}", $pattern);
+        $pattern = \str_replace("[uuid]", "{[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}}", $pattern);
 
         \preg_match_all('#\{(.*)\}#', $pattern, $matches, \PREG_PATTERN_ORDER);
 
