@@ -16,7 +16,6 @@ use Zend\Filter\FilterChain;
 use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorChain;
 use Zend\Validator\ValidatorInterface as Validator;
-use Zend\Validator\NotEmpty;
 
 /**
  * @author Antonio del Olmo García <adelolmog@gmail.com>
