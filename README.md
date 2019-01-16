@@ -229,10 +229,15 @@ var_dump($data->toArray());
 
 ```
 
-In the case above, the part `[]` is automatically replaced by `[0-9]*`. However, any regular expression can be used by using brackets. Consider the following Psr\Http\Message\RequestInterface:
+In the case above, the part `[]` is automatically replaced by `[0-9]*`. However, any regular expression can be used by encapsulating the expression between brackets. Consider the following example:
 
 ``` php
 use Zend\Diactoros\ServerRequest;
+use Zend\Filter\StringTrim;
+use Zend\Filter\ToInt;
+use Zend\Validator\Digits;
+use Zend\Validator\EmailAddress;
+use Zend\Validator\NotEmpty;
 
 $request = (new ServerRequest([], [], '/', 'POST'))
     ->withParsedBody([
@@ -241,14 +246,6 @@ $request = (new ServerRequest([], [], '/', 'POST'))
             "1235" => "jane.doe@localhost.com"
         ]
     ]);
-
-```
-``` php
-use Zend\Filter\StringTrim;
-use Zend\Filter\ToInt;
-use Zend\Validator\Digits;
-use Zend\Validator\EmailAddress;
-use Zend\Validator\NotEmpty;
 
 $distiller = new \DelOlmo\Distiller\Distiller($request);
 

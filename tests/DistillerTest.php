@@ -108,11 +108,13 @@ class DistillerTest extends TestCase
     {
         $request = (new ServerRequest([], [], '/', 'GET'))
             ->withQueryParams(['email' => 'localhost@localhost.com'])
-            ->withAttribute('test', 'value');
+            ->withAttribute('testAssoc', ["hello" => 'world'])
+            ->withAttribute('testNonAssoc', [["name" => "hello@world.com"], ["name" => 'array@localhost.es']]);
 
         $distiller = (new Distiller($request));
         $distiller->addValidator('email', new EmailAddress(), true);
-        $distiller->addValidator('test', new NotEmpty(), true);
+        $distiller->addValidator('testAssoc.{[a-z]{4}}', new NotEmpty(), true);
+        $distiller->addValidator('testNonAssoc[].name', new EmailAddress(), true);
 
         $this->assertTrue($distiller->isValid());
     }
