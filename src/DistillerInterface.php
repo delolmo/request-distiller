@@ -26,20 +26,21 @@ interface DistillerInterface
     public function addCallback(callable $callback);
 
     /**
-     * Adds a new filter to the specified field.
+     * Adds a new filter to the specified field, represented by a pattern.
      *
-     * @param string $field
+     * @param string $pattern
      * @param \Zend\Filter\FilterInterface $filter
      */
-    public function addFilter(string $field, Filter $filter);
+    public function addFilter(string $pattern, Filter $filter);
 
     /**
-     * Adds a new validation rule to the specified field.
+     * Adds a new validation rule to the specified field, represented by a
+     * pattern.
      *
-     * @param string $field
+     * @param string $pattern
      * @param \Zend\Validator\ValidatorInterface $validator
      */
-    public function addValidator(string $field, Validator $validator);
+    public function addValidator(string $pattern, Validator $validator);
 
     /**
      * Returns an associative array with the request data, with the key being

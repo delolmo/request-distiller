@@ -16,6 +16,7 @@ use Zend\Filter\FilterChain;
 use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorChain;
 use Zend\Validator\ValidatorInterface as Validator;
+use Zend\Validator\NotEmpty;
 
 /**
  * @author Antonio del Olmo García <adelolmog@gmail.com>
@@ -99,29 +100,29 @@ class Distiller implements DistillerInterface
     /**
      * {@inheritdoc}
      */
-    public function addFilter(string $field, Filter $filter)
+    public function addFilter(string $pattern, Filter $filter)
     {
         // If the filter is not an instance of FilterChain, create it
-        if (empty($this->filters[$field])) {
-            $this->filters[$field] = new FilterChain();
+        if (empty($this->filters[$pattern])) {
+            $this->filters[$pattern] = new FilterChain();
         }
 
         // Add the new filter to the filter chain
-        \call_user_func([$this->filters[$field], 'attach'], $filter);
+        \call_user_func([$this->filters[$pattern], 'attach'], $filter);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addValidator(string $field, Validator $validator)
+    public function addValidator(string $pattern, Validator $validator)
     {
         // If the validator is not an instance of ValidatorChain, create it
-        if (empty($this->validators[$field])) {
-            $this->validators[$field] = new ValidatorChain();
+        if (empty($this->validators[$pattern])) {
+            $this->validators[$pattern] = new ValidatorChain();
         }
 
         // Add the new validator to the validator chain
-        \call_user_func([$this->validators[$field], 'attach'], $validator);
+        \call_user_func([$this->validators[$pattern], 'attach'], $validator);
     }
 
     /**
@@ -197,25 +198,52 @@ class Distiller implements DistillerInterface
     protected function validate()
     {
         // Get raw data
-        $rawData = self::arrayCompress(
-            $this->getRawData()
-        );
+        $rawData = $this->getRawData();
+        $compressedRawData = self::arrayCompress($rawData);
 
-        foreach ($this->validators as $field => $validator) {
-            // The field's value
-            $value = $rawData[$field] ?? null;
+        // Loop through all the validators
+        foreach ($this->validators as $pattern => $validator) {
+            // Parsed pattern
+            $parsedPattern = self::parsePattern($pattern);
 
-            // If everything is correct, jump to next field
-            if (empty($validator) ||
-                $validator->isValid($value)) {
-                continue;
+            // All the parts of the parsed pattern
+            $patternParts = explode('\.', trim($parsedPattern, '/'));
+
+            // Fill in with nulls all the variables that don't exist
+            foreach ($compressedRawData as $key => $value) {
+                $oneMatched = false;
+                for ($i = 0, $l = count($patternParts); $i < $l; $i++) {
+                    $matchableParts = array_slice($patternParts, 0, $i + 1);
+                    $matchablePattern = '/' . implode('\.', $matchableParts) . '/';
+                    if (\preg_match($matchablePattern, $key) === 1) {
+                        $oneMatched = true;
+                    } else {
+                        if ($oneMatched === true) {
+                            $compressedRawData[$parsedPattern] = null;
+                        }
+                    }
+                }
             }
 
-            // Else generate and save all validation errors
-            foreach ($validator->getMessages() as $message) {
-                $error = $this->errorFactory
-                    ->create($field, $message, $validator, $value);
-                $this->errors[] = $error;
+            // Loop through all the extracted variables
+            foreach ($compressedRawData as $key => $value) {
+                if (\preg_match($parsedPattern, $key) !== 1 &&
+                    $key !== $parsedPattern) {
+                    continue;
+                }
+
+                // Check to see if value is valid
+                if (empty($validator) ||
+                    $validator->isValid($value)) {
+                    continue;
+                }
+
+                // Else generate and save all validation errors
+                foreach ($validator->getMessages() as $message) {
+                    $error = $this->errorFactory
+                        ->create($key, $message, $validator, $value);
+                    $this->errors[] = $error;
+                }
             }
         }
     }
@@ -302,5 +330,32 @@ class Distiller implements DistillerInterface
     protected static function createDefaultErrorFactory(): ErrorFactoryInterface
     {
         return new ErrorFactory();
+    }
+
+    /**
+     * Creates the regular expression to compare against the field's name.
+     *
+     * @param string $pattern
+     * @return string
+     */
+    protected static function parsePattern(string $pattern): string
+    {
+        $matches = [];
+
+        $pattern = \str_replace("[]", ".{[0-9]*}", $pattern);
+
+        \preg_match_all('#\{(.*)\}#', $pattern, $matches, \PREG_PATTERN_ORDER);
+
+        foreach ($matches[0] as $key => $match) {
+            $pattern = \str_replace($match, "#{$key}", $pattern);
+        }
+
+        $pattern = \preg_quote($pattern);
+
+        foreach ($matches[0] as $key => $match) {
+            $pattern = \str_replace("#{$key}", substr($match, 1, -1), $pattern);
+        }
+
+        return "/" . $pattern . "/";
     }
 }
