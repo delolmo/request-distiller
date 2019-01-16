@@ -172,6 +172,105 @@ Filters are objects that transform a variable when `filter($value)` is called. F
 
 Callbacks are functions that apply to all the variables at once. Callbacks are only called when a request is considered valid and after applying all the Filters. Their only requirement is that they be callables. Callbacks receive the Data Transfer Object as their one and only argument and should return the modified Data Transfer Object.
 
+## Matching fields against regular expressions
+
+Distiller objects allow matching fields against regular expressions. This provides further flexibility for applying validation rules.
+
+Consider the following Psr\Http\Message\RequestInterface:
+
+``` php
+use Zend\Diactoros\ServerRequest;
+
+$request = (new ServerRequest([], [], '/', 'POST'))
+    ->withParsedBody([
+        'users' => [
+            [
+                "name" => "    John Doe    ",
+                "email" => "john.doe@localhost.com"
+            ],
+            [
+                "name" => "    Jane Doe    ",
+                "email" => "jane.doe@localhost.com"
+            ]
+        ]
+    ]);
+
+```
+
+Distiller objects allow applying complex validation and filtering rules.
+
+``` php
+use Zend\Filter\StringTrim;
+use Zend\Filter\ToInt;
+use Zend\Validator\Digits;
+use Zend\Validator\EmailAddress;
+use Zend\Validator\NotEmpty;
+
+$distiller = new \DelOlmo\Distiller\Distiller($request);
+
+$distiller->addValidator('users[].email', new EmailAddress());
+$distiller->addValidator('users[].name', new NotEmpty());
+$distiller->addFilter('users[].name', new StringTrim());
+
+if (!$distiller->isValid()) {
+    // Handle errors
+    $errors = $distiller->getErrors();
+    $this->addFlash('error', $errors);
+
+    // Do more stuff, like redirecting the user
+    return new RedirectResponse('/');
+}
+
+// Will return a Data Transfer Object (further reading below)
+$data = $distiller->getData();
+
+// Will return array('users' => [["name" => "John Doe", "email" => "john.doe@localhost.com'], ["name" => "Jane Doe", "email" => "jane.doe@localhost.com"]];
+var_dump($data->toArray());
+
+```
+
+In the case above, the part `[]` is automatically replaced by `[0-9]*`. However, any regular expression can be used by using brackets. Consider the following Psr\Http\Message\RequestInterface:
+
+``` php
+use Zend\Diactoros\ServerRequest;
+
+$request = (new ServerRequest([], [], '/', 'POST'))
+    ->withParsedBody([
+        'userIds' => [
+            "0001" => "john.doe@localhost.com",
+            "1235" => "jane.doe@localhost.com"
+        ]
+    ]);
+
+```
+``` php
+use Zend\Filter\StringTrim;
+use Zend\Filter\ToInt;
+use Zend\Validator\Digits;
+use Zend\Validator\EmailAddress;
+use Zend\Validator\NotEmpty;
+
+$distiller = new \DelOlmo\Distiller\Distiller($request);
+
+$distiller->addValidator('userIds.{[0-9]{4}}', new EmailAddress());
+
+if (!$distiller->isValid()) {
+    // Handle errors
+    $errors = $distiller->getErrors();
+    $this->addFlash('error', $errors);
+
+    // Do more stuff, like redirecting the user
+    return new RedirectResponse('/');
+}
+
+// Will return a Data Transfer Object (further reading below)
+$data = $distiller->getData();
+
+// Will return array("userIds" => ["0001" => "john.doe@localhost.com", "1235" => "jane.doe@localhost.com"]];
+var_dump($data->toArray());
+
+```
+
 ## Organizing your Distiller objects
 
 As you've seen, a Distiller object can be created and used anywhere, including directly in a controller. However, a better practice is to build the Distiller in a separate, standalone PHP class, which can be reused anywhere in your application. Create a new class that will house the logic for validating the HTTP request:
