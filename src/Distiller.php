@@ -138,15 +138,30 @@ class Distiller implements DistillerInterface
         $data = $this->dtoFactory->create();
 
         // The raw data, extracted from the request
-        $rawData = self::arrayCompress(
-            $this->getRawData()
-        );
+        $rawData = $this->getRawData();
+        $compressedRawData = self::arrayCompress($rawData);
 
-        // Filter raw values
-        foreach ($rawData as $field => $value) {
-            $filter = $this->filters[$field] ?? null;
+        // Loop through all variables
+        foreach ($compressedRawData as $field => $value) {
+            // Loop through all filters
+            foreach ($this->filters as $pattern => $filter) {
+                // Parsed pattern
+                $parsedPattern = self::parsePattern($pattern);
 
-            $data[$field] = empty($filter) ? $value : $filter->filter($value);
+                // If the pattern does not match, continue
+                if (\preg_match($parsedPattern, $field) !== 1) {
+                    continue;
+                }
+
+                // Add filtered value to data object
+                $data[$field] = $filter->filter($value);
+            }
+
+            // If, after the loop, the field is yet not set, let the filtered
+            // value be the same as the raw value
+            if (!isset($data[$field])) {
+                $data[$field] = $value;
+            }
         }
 
         // Execute callbacks on the filtered data
