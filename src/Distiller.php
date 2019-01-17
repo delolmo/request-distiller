@@ -11,6 +11,9 @@ use DelOlmo\Distiller\Error\ErrorFactory;
 use DelOlmo\Distiller\Error\ErrorFactoryInterface;
 use DelOlmo\Distiller\Exception\InvalidRequestException;
 use DelOlmo\Distiller\Extractor\ExtractorInterface;
+use DelOlmo\Distiller\Parser\Modifier;
+use DelOlmo\Distiller\Parser\Parser;
+use DelOlmo\Distiller\Parser\ParserInterface;
 use Psr\Http\Message\RequestInterface;
 use Zend\Filter\FilterChain;
 use Zend\Filter\FilterInterface as Filter;
@@ -54,6 +57,11 @@ class Distiller implements DistillerInterface
     protected $errors = [];
 
     /**
+     * @var \DelOlmo\Distiller\Parser\ParserInterface
+     */
+    protected $parser;
+
+    /**
      * @var \Zend\Validator\ValidatorInterface[]
      */
     protected $validators = [];
@@ -75,16 +83,19 @@ class Distiller implements DistillerInterface
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
      * @param \DelOlmo\Distiller\Error\ErrorFactoryInterface $errorFactory
      * @param \DelOlmo\Distiller\Dto\DtoFactoryInterface $dtoFactory
+     * @param \DelOlmo\Distiller\Dto\ParserInterface $parser
      */
     public function __construct(
         RequestInterface $request,
         ExtractorInterface $extractor = null,
         ErrorFactoryInterface $errorFactory = null,
-        DtoFactoryInterface $dtoFactory = null
+        DtoFactoryInterface $dtoFactory = null,
+        ParserInterface $parser = null
     ) {
         $this->dtoFactory = $dtoFactory ?? self::createDefaultDtoFactory();
         $this->errorFactory = $errorFactory ?? self::createDefaultErrorFactory();
         $this->extractor = $extractor ?? self::createDefaultExtractor();
+        $this->parser = $parser ?? self::createDefaultParser();
         $this->request = $request;
     }
 
@@ -145,7 +156,7 @@ class Distiller implements DistillerInterface
             // Loop through all filters
             foreach ($this->filters as $pattern => $filter) {
                 // Parsed pattern
-                $parsedPattern = self::parsePattern($pattern);
+                $parsedPattern = $this->parser->parse($pattern);
 
                 // If the pattern does not match, continue
                 if (\preg_match($parsedPattern, $field) !== 1) {
@@ -213,31 +224,12 @@ class Distiller implements DistillerInterface
     {
         // Get raw data
         $rawData = $this->getRawData();
-        $compressedRawData = self::arrayCompress($rawData);
+        $compressedRawData = self::arrayCompress($rawData, '', true);
 
         // Loop through all the validators
         foreach ($this->validators as $pattern => $validator) {
             // Parsed pattern
-            $parsedPattern = self::parsePattern($pattern);
-
-            // All the parts of the parsed pattern
-            $patternParts = explode('\.', trim($parsedPattern, '/'));
-
-            // Fill in with nulls all the variables that don't exist
-            foreach ($compressedRawData as $key => $value) {
-                $oneMatched = false;
-                for ($i = 0, $l = count($patternParts); $i < $l; $i++) {
-                    $matchableParts = array_slice($patternParts, 0, $i + 1);
-                    $matchablePattern = '/' . implode('\.', $matchableParts) . '/';
-                    if (\preg_match($matchablePattern, $key) === 1) {
-                        $oneMatched = true;
-                    } else {
-                        if ($oneMatched === true) {
-                            $compressedRawData[$parsedPattern] = null;
-                        }
-                    }
-                }
-            }
+            $parsedPattern = $this->parser->parse($pattern);
 
             // Loop through all the extracted variables
             foreach ($compressedRawData as $key => $value) {
@@ -267,16 +259,18 @@ class Distiller implements DistillerInterface
      * in dot notation.
      *
      * @param array $array
-     * @param string $prefix
      */
-    protected static function arrayCompress(array $array, string $prefix = ''): array
+    protected static function arrayCompress(array $array, string $prefix = '', bool $trail = true): array
     {
         $result = array();
         foreach ($array as $key => $value) {
+            if ($trail === true) {
+                $result[$prefix . $key] = $value;
+            }
             if (is_array($value)) {
-                $result = $result + self::arrayCompress($value, $prefix . $key . '.');
+                $result = $result + self::arrayCompress($value, $prefix . $key . '.', true);
             } else {
-                $result[$prefix.$key] = $value;
+                $result[$prefix . $key] = $value;
             }
         }
         return $result;
@@ -352,25 +346,23 @@ class Distiller implements DistillerInterface
      * @param string $pattern
      * @return string
      */
-    protected static function parsePattern(string $pattern): string
+    protected static function createDefaultParser(): ParserInterface
     {
-        $matches = [];
+        // Create default parser
+        $parser = new Parser();
 
-        $pattern = \str_replace("[]", ".{[0-9]*}", $pattern);
-        $pattern = \str_replace("[uuid]", "{[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}}", $pattern);
+        // Add [] as a shortcut
+        $parser->addModifier(new Modifier("[]", ".{[0-9]*}"));
 
-        \preg_match_all('#\{(.*)\}#', $pattern, $matches, \PREG_PATTERN_ORDER);
+        // Add [uuid] as a shortcut
+        $parser->addModifier(
+            new Modifier(
+                "[uuid]",
+                "{([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}){1}}"
+            )
+        );
 
-        foreach ($matches[0] as $key => $match) {
-            $pattern = \str_replace($match, "#{$key}", $pattern);
-        }
-
-        $pattern = \preg_quote($pattern);
-
-        foreach ($matches[0] as $key => $match) {
-            $pattern = \str_replace("#{$key}", substr($match, 1, -1), $pattern);
-        }
-
-        return "/" . $pattern . "/";
+        // Finally, return default parser
+        return $parser;
     }
 }
