@@ -233,8 +233,7 @@ class Distiller implements DistillerInterface
 
             // Loop through all the extracted variables
             foreach ($compressedRawData as $key => $value) {
-                if (\preg_match($parsedPattern, $key) !== 1 &&
-                    $key !== $parsedPattern) {
+                if (\preg_match($parsedPattern, $key) !== 1) {
                     continue;
                 }
 
