@@ -153,6 +153,11 @@ class Distiller implements DistillerInterface
 
         // Loop through all variables
         foreach ($compressedRawData as $field => $value) {
+            // Immediately add field to output
+            if (!isset($data[$field])) {
+                $data[$field] = $value;
+            }
+
             // Loop through all filters
             foreach ($this->filters as $pattern => $filter) {
                 // Parsed pattern
@@ -164,14 +169,9 @@ class Distiller implements DistillerInterface
                 }
 
                 // Add filtered value to data object
-                $data[$field] = $filter->filter($value);
+                $data[$field] = $filter->filter($data[$field]);
             }
 
-            // If, after the loop, the field is yet not set, let the filtered
-            // value be the same as the raw value
-            if (!isset($data[$field])) {
-                $data[$field] = $value;
-            }
         }
 
         // Execute callbacks on the filtered data
