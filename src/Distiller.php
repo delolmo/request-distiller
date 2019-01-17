@@ -171,7 +171,6 @@ class Distiller implements DistillerInterface
                 // Add filtered value to data object
                 $data[$field] = $filter->filter($data[$field]);
             }
-
         }
 
         // Execute callbacks on the filtered data
