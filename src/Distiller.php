@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace DelOlmo\Distiller;
 
@@ -92,11 +92,11 @@ class Distiller implements DistillerInterface
         DtoFactoryInterface $dtoFactory = null,
         ParserInterface $parser = null
     ) {
-        $this->dtoFactory = $dtoFactory ?? self::createDefaultDtoFactory();
+        $this->dtoFactory   = $dtoFactory ?? self::createDefaultDtoFactory();
         $this->errorFactory = $errorFactory ?? self::createDefaultErrorFactory();
-        $this->extractor = $extractor ?? self::createDefaultExtractor();
-        $this->parser = $parser ?? self::createDefaultParser();
-        $this->request = $request;
+        $this->extractor    = $extractor ?? self::createDefaultExtractor();
+        $this->parser       = $parser ?? self::createDefaultParser();
+        $this->request      = $request;
     }
 
     /**
@@ -148,8 +148,8 @@ class Distiller implements DistillerInterface
         $data = $this->dtoFactory->create();
 
         // The raw data, extracted from the request
-        $rawData = $this->getRawData();
-        $compressedRawData = self::arrayCompress($rawData);
+        $rawData           = $this->getRawData();
+        $compressedRawData = self::arrayPack($rawData);
 
         // Loop through all variables
         foreach ($compressedRawData as $field => $value) {
@@ -180,9 +180,9 @@ class Distiller implements DistillerInterface
 
         // Return resulting data
         return $this->dtoFactory
-            ->create(
-                self::arrayExpand($data->toArray())
-            );
+                ->create(
+                    self::arrayUnpack($data->toArray())
+                );
     }
 
     /**
@@ -221,22 +221,22 @@ class Distiller implements DistillerInterface
      */
     protected function validate()
     {
-        // Get raw data
-        $rawData = $this->getRawData();
-        $compressedRawData = self::arrayCompress($rawData, '', true);
+        /* @var $rawData array */
+        $rawData = $this->prepareRawDataForValidation();
 
         // Loop through all the validators
         foreach ($this->validators as $pattern => $validator) {
-            // Parsed pattern
+            // The pattern that must be matched
             $parsedPattern = $this->parser->parse($pattern);
 
-            // Loop through all the extracted variables
-            foreach ($compressedRawData as $key => $value) {
-                if (\preg_match($parsedPattern, $key) !== 1) {
+            // Loop all variables in raw data
+            foreach ($rawData as $key => $value) {
+                // Check to see if there is a match
+                if (preg_match($parsedPattern, $key) !== 1) {
                     continue;
                 }
 
-                // Check to see if value is valid
+                // If everything is correct, jump to next field
                 if (empty($validator) ||
                     $validator->isValid($value)) {
                     continue;
@@ -245,7 +245,7 @@ class Distiller implements DistillerInterface
                 // Else generate and save all validation errors
                 foreach ($validator->getMessages() as $message) {
                     $error = $this->errorFactory
-                        ->create($key, $message, $validator, $value);
+                            ->create($key, $message, $validator, $value);
                     $this->errors[] = $error;
                 }
             }
@@ -253,22 +253,127 @@ class Distiller implements DistillerInterface
     }
 
     /**
+     * This function should fill in with nulls any field that has a validation
+     * rule attached but has not been sent with the Request object.
+     *
+     * @return array
+     */
+    protected function prepareRawDataForValidation(): array
+    {
+        /* @var $rawData array */
+        $rawData = $this->getRawData();
+
+        /* @var $packedRawData array */
+        $packedRawData = self::arrayPackWithAncestors($rawData);
+
+        /* @var $patterns array */
+        $patterns = array_keys($this->validators);
+
+        foreach ($patterns as $pattern) {
+            // The pattern against which fields are matched
+            $patternElement = $this->parser->parse($pattern);
+
+            // Every part of the pattern, separated by dots
+            $patternParts = explode("\.", trim($patternElement, "/^$"));
+
+            // The last element of the pattern
+            $elementPart = array_slice($patternParts, -1, 1)[0];
+
+            // We cannot add nulls to a regular expression, that's up to the user
+            if ($elementPart !== \preg_quote($elementPart)) {
+                continue;
+            }
+
+            // The pattern for the parent element
+            $parentParts = array_slice($patternParts, 0, -1);
+
+            // The pattern that must match all parents
+            $parentPattern = implode("\.", $parentParts);
+
+            // If there are no parents, simply add nulls using the element part
+            if (empty($parentPattern)) {
+                if (!isset($packedRawData[$elementPart])) {
+                    $packedRawData[$elementPart] = null;
+                }
+                continue;
+            }
+
+            // The exact pattern for the parents
+            $parentPattern = "/^{$parentPattern}$/";
+
+            // Function to filter all the parents
+            $filterFn = function ($key) use ($parentPattern) {
+                return preg_match($parentPattern, $key) === 1;
+            };
+
+            // Get all parents
+            $parentElements = \array_filter($packedRawData, $filterFn, \ARRAY_FILTER_USE_KEY);
+
+            // Loop through all parents
+            foreach ($parentElements as $parentKey => $parentValue) {
+                // The pattern for all the descendants
+                $parentDescendants = "/^" . preg_quote($parentKey) . "\./";
+
+                $filterFn = function ($key) use ($parentDescendants) {
+                    return preg_match($parentDescendants, $key) === 1;
+                };
+
+                // Get all descendants of this parent
+                $descendantElements = \array_filter($packedRawData, $filterFn, \ARRAY_FILTER_USE_KEY);
+
+                $match = false;
+
+                foreach ($descendantElements as $descendantKey => $decendantValue) {
+                    if (\preg_match($patternElement, $descendantKey)) {
+                        $match = true;
+                        break;
+                    }
+                }
+
+                if ($match === false) {
+                    $packedRawData[$parentKey . ".{$elementPart}"] = null;
+                }
+            }
+        }
+
+        return $packedRawData;
+    }
+
+    /**
      * Transforms a multidimensional array to a single array with string keys
      * in dot notation.
      *
      * @param array $array
+     * @param string $prefix
      */
-    protected static function arrayCompress(array $array, string $prefix = '', bool $trail = true): array
+    protected static function arrayPack(array $array, string $prefix = ''): array
     {
         $result = array();
         foreach ($array as $key => $value) {
-            if ($trail === true) {
-                $result[$prefix . $key] = $value;
-            }
-            if (is_array($value)) {
-                $result = $result + self::arrayCompress($value, $prefix . $key . '.', true);
+            if (is_array($value) && count($value) !== 0) {
+                $result = $result + self::arrayPack($value, $prefix . $key . '.', true);
             } else {
                 $result[$prefix . $key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Transforms a multidimensional array to a single array with string keys
+     * in dot notation, but all ancestors are kept untouched in the result.
+     *
+     * @param array $array
+     * @param string $prefix
+     * @return array
+     */
+    protected static function arrayPackWithAncestors(array $array, string $prefix = ''): array
+    {
+        $result = array();
+        foreach ($array as $key => $value) {
+            $result[$prefix . $key] = $value;
+            if (is_array($value) && count($value) !== 0) {
+                $result = $result + self::arrayPackWithAncestors($value, $prefix . $key . '.', true);
             }
         }
         return $result;
@@ -281,13 +386,13 @@ class Distiller implements DistillerInterface
      * @param array $array
      * @return array
      */
-    protected static function arrayExpand(array $array): array
+    protected static function arrayUnpack(array $array): array
     {
         $newArray = array();
         foreach ($array as $key => $value) {
             $dots = explode(".", $key);
             if (count($dots) > 1) {
-                $last = &$newArray[ $dots[0] ];
+                $last = &$newArray[$dots[0]];
                 foreach ($dots as $k => $dot) {
                     if ($k == 0) {
                         continue;

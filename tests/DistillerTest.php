@@ -19,6 +19,213 @@ use Zend\Validator\NotEmpty;
  */
 class DistillerTest extends TestCase
 {
+    public function testArrayPack()
+    {
+        $distiller = new Distiller(new Request());
+
+        $method = new \ReflectionMethod(
+            Distiller::class,
+            lcfirst(substr(__FUNCTION__, 4))
+        );
+
+        $method->setAccessible(true);
+
+        $input = [
+            "element1" => [],
+            "element2" => "foo bar",
+            "list1" => [
+                "list1Item1" => ["id" => 1],
+                "list1Item2" => ["id" => 2],
+            ],
+            "list2" => [
+                ["list2Item1" => 3],
+                ["list2Item2" => 4],
+            ]
+        ];
+
+        $output = $method->invoke($distiller, $input);
+
+        $this->assertEquals(
+            $output,
+            [
+                "element1" => [],
+                "element2" => "foo bar",
+                "list1.list1Item1.id" => 1,
+                "list1.list1Item2.id" => 2,
+                "list2.0.list2Item1" => 3,
+                "list2.1.list2Item2" => 4
+            ]
+        );
+    }
+
+    public function testArrayPackWithAncestors()
+    {
+        $distiller = new Distiller(new Request());
+
+        $method = new \ReflectionMethod(
+            Distiller::class,
+            lcfirst(substr(__FUNCTION__, 4))
+        );
+
+        $method->setAccessible(true);
+
+        $input = [
+            "list1" => [
+                "list1Item1" => ["id" => 1],
+                "list1Item2" => ["id" => 2],
+            ]
+        ];
+
+        $output = $method->invoke($distiller, $input);
+
+        $this->assertEquals(
+            $output,
+            [
+                "list1" => [
+                    "list1Item1" => ["id" => 1],
+                    "list1Item2" => ["id" => 2],
+                ],
+                "list1.list1Item1" => ["id" => 1],
+                "list1.list1Item2" => ["id" => 2],
+                "list1.list1Item1.id" => 1,
+                "list1.list1Item2.id" => 2,
+            ]
+        );
+    }
+
+    public function testArrayUnpack()
+    {
+        $distiller = new Distiller(new Request());
+
+        $arrayPack = new \ReflectionMethod(
+            Distiller::class,
+            'arrayPack'
+        );
+
+        $arrayPack->setAccessible(true);
+
+        $arrayUnpack = new \ReflectionMethod(
+            Distiller::class,
+            lcfirst(substr(__FUNCTION__, 4))
+        );
+
+        $arrayUnpack->setAccessible(true);
+
+        $input = [
+            "element1" => [],
+            "element2" => "foo bar",
+            "list1" => [
+                "list1Item1" => ["id" => 1],
+                "list1Item2" => ["id" => 2],
+            ],
+            "list2" => [
+                ["list2Item1" => 3],
+                ["list2Item2" => 4],
+            ]
+        ];
+
+        $output = $arrayPack->invoke($distiller, $input);
+
+        $this->assertEquals($input, $arrayUnpack->invoke($distiller, $output));
+    }
+
+    public function testGetRawData()
+    {
+        // Test unidimensional array
+        $request1 = (new ServerRequest([], [], '/', 'POST'))
+            ->withQueryParams(['john' => 'doe'])
+            ->withParsedBody(['foo' => 'bar'])
+            ->withAttribute('test', 'value');
+
+        $distiller1 = (new Distiller($request1));
+
+        $this->assertEquals(
+            [
+                'john' => 'doe',
+                'foo' => 'bar',
+                'test' => 'value'
+            ],
+            $distiller1->getRawData()
+        );
+
+        // Test multidimensional array
+        $request2 = (new ServerRequest([], [], '/', 'POST'))
+            ->withQueryParams(['john' => 'doe'])
+            ->withParsedBody(['foo' => ['bar', 'baz']])
+            ->withAttribute('test', 'value');
+
+        $distiller2 = (new Distiller($request2));
+
+        $this->assertEquals(
+            [
+                'john' => 'doe',
+                'foo' => ['bar', 'baz'],
+                'test' => 'value'
+            ],
+            $distiller2->getRawData()
+        );
+    }
+
+    public function testPrepareRawDataForValidation()
+    {
+        $request = (new ServerRequest([], [], '/', 'GET'))
+            ->withAttribute("user", ["name" => "John Doe"])
+            ->withAttribute("groups", [["name" => "admins"], ["name" => "users"]])
+            ->withAttribute("permissions", ["permission1", "permission2"]);
+
+        $distiller = (new Distiller($request));
+        $distiller->addValidator('user.email', new NotEmpty(), true);
+        $distiller->addValidator('groups[].email', new NotEmpty(), true);
+        $distiller->addValidator('permissions[].{[0-9]{4}}', new NotEmpty(), true);
+
+        $method = new \ReflectionMethod(
+            Distiller::class,
+            lcfirst(substr(__FUNCTION__, 4))
+        );
+
+        $method->setAccessible(true);
+
+        $output = $method->invoke($distiller);
+
+        $this->assertEquals(
+            $output,
+            [
+                "user" => ["name" => "John Doe"],
+                "user.name" => "John Doe",
+                "user.email" => null,
+                "groups" => [["name" => "admins"], ["name" => "users"]],
+                "groups.0" => ["name" => "admins"],
+                "groups.0.name" => "admins",
+                "groups.0.email" => null,
+                "groups.1" => ["name" => "users"],
+                "groups.1.name" => "users",
+                "groups.1.email" => null,
+                "permissions" => ["permission1", "permission2"],
+                "permissions.0" => "permission1",
+                "permissions.1" => "permission2",
+            ]
+        );
+    }
+
+    public function testIsValid()
+    {
+        $request = (new ServerRequest([], [], '/', 'GET'))
+            ->withQueryParams(['email' => 'localhost@localhost.com'])
+            ->withAttribute('users', [["name" => "hello@world.com"], ["name" => 'array@localhost.es']]);
+
+        $distiller = (new Distiller($request));
+        $distiller->addValidator('email', new EmailAddress(), true);
+        $distiller->addValidator('users', new NotEmpty(), true);
+        $distiller->addValidator('users[]', new NotEmpty(), true);
+        $distiller->addValidator('users[].name', new NotEmpty(), true);
+
+        $distiller2 = clone $distiller;
+        $distiller2->addValidator('users[].email', new EmailAddress(), true);
+
+        $this->assertTrue($distiller->isValid());
+        $this->assertFalse($distiller2->isValid());
+    }
+
     public function testGetData()
     {
         $request = (new ServerRequest([], [], '/', 'GET'))
@@ -65,58 +272,6 @@ class DistillerTest extends TestCase
 
         $error = "test: Value is required and can't be empty";
         $this->assertEquals($error, $errors[0]);
-    }
-
-    public function testGetRawData()
-    {
-        // Test unidimensional array
-        $request1 = (new ServerRequest([], [], '/', 'POST'))
-            ->withQueryParams(['john' => 'doe'])
-            ->withParsedBody(['foo' => 'bar'])
-            ->withAttribute('test', 'value');
-
-        $distiller1 = (new Distiller($request1));
-
-        $this->assertEquals(
-            [
-                'john' => 'doe',
-                'foo' => 'bar',
-                'test' => 'value'
-            ],
-            $distiller1->getRawData()
-        );
-
-        // Test multidimensional array
-        $request2 = (new ServerRequest([], [], '/', 'POST'))
-            ->withQueryParams(['john' => 'doe'])
-            ->withParsedBody(['foo' => ['bar', 'baz']])
-            ->withAttribute('test', 'value');
-
-        $distiller2 = (new Distiller($request2));
-
-        $this->assertEquals(
-            [
-                'john' => 'doe',
-                'foo' => ['bar', 'baz'],
-                'test' => 'value'
-            ],
-            $distiller2->getRawData()
-        );
-    }
-
-    public function testIsValid()
-    {
-        $request = (new ServerRequest([], [], '/', 'GET'))
-            ->withQueryParams(['email' => 'localhost@localhost.com'])
-            ->withAttribute('testAssoc', ["hello" => 'world'])
-            ->withAttribute('testNonAssoc', [["name" => "hello@world.com"], ["name" => 'array@localhost.es']]);
-
-        $distiller = (new Distiller($request));
-        $distiller->addValidator('email', new EmailAddress(), true);
-        $distiller->addValidator('testAssoc.{[a-z]{4}}', new NotEmpty(), true);
-        $distiller->addValidator('testNonAssoc[].name', new EmailAddress(), true);
-
-        $this->assertTrue($distiller->isValid());
     }
 
     public function testThrowInvalidRequestException()
