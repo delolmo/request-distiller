@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Request;
 use Zend\Diactoros\ServerRequest;
 use Zend\Filter\StringToUpper;
+use Zend\Filter\ToFloat;
 use Zend\Filter\ToInt;
 use Zend\Validator\EmailAddress;
 use Zend\Validator\NotEmpty;
@@ -238,7 +239,9 @@ class DistillerTest extends TestCase
         $distiller->addFilter('email', new StringToUpper());
         $distiller->addFilter('test', new ToInt());
         $distiller->addFilter('array.option1', new ToInt());
+        $distiller->addFilter('array.option1', new ToFloat());
         $distiller->addFilter('list.0', new ToInt());
+
         $distiller->addCallback(function (\ArrayAccess $data) {
             $data['foo'] = 'bar';
             return $data;
@@ -248,7 +251,7 @@ class DistillerTest extends TestCase
             'email' => 'LOCALHOST@LOCALHOST.COM',
             'test' => 1,
             'foo' => 'bar',
-            'array' => ['option1' => 1],
+            'array' => ['option1' => 1.0],
             'list' => [2, 'foo']
         ];
         $result = $distiller->getData()->toArray();
