@@ -145,33 +145,39 @@ class Distiller implements DistillerInterface
         }
 
         // Create the Data Transfer Object
-        $data = $this->dtoFactory->create();
+        $data = array();
 
         // The raw data, extracted from the request
-        $rawData           = $this->getRawData();
-        $compressedRawData = self::arrayPack($rawData);
+        $rawData = $this->prepareRawDataForFiltering();
 
-        // Loop through all variables
-        foreach ($compressedRawData as $field => $value) {
-            // Immediately add field to output
-            if (!isset($data[$field])) {
-                $data[$field] = $value;
-            }
+        // Loop data from the deepest levels to the shallowest, while unpacking
+        // the array on each step.
+        foreach ($rawData as $depth => $values) {
+            // Add current depth level to results
+            $data = $data + $rawData[$depth];
 
-            // Loop through all filters
-            foreach ($this->filters as $pattern => $filter) {
-                // Parsed pattern
-                $parsedPattern = $this->parser->parse($pattern);
+            foreach ($values as $field => $value) {
+                // Loop through all filters
+                foreach ($this->filters as $pattern => $filter) {
+                    // Parsed pattern
+                    $parsedPattern = $this->parser->parse($pattern);
 
-                // If the pattern does not match, continue
-                if (\preg_match($parsedPattern, $field) !== 1) {
-                    continue;
+                    // If the pattern does not match, continue
+                    if (\preg_match($parsedPattern, $field) !== 1) {
+                        continue;
+                    }
+
+                    // Add filtered value to data object
+                    $data[$field] = $filter->filter($data[$field]);
                 }
-
-                // Add filtered value to data object
-                $data[$field] = $filter->filter($data[$field]);
             }
+
+            // Unpack data for next step
+            $data = self::arrayUnpack($data);
         }
+
+        // Transform to data transfer object
+        $data = $this->dtoFactory->create($data);
 
         // Execute callbacks on the filtered data
         foreach ($this->callbacks as $callback) {
@@ -179,10 +185,7 @@ class Distiller implements DistillerInterface
         }
 
         // Return resulting data
-        return $this->dtoFactory
-                ->create(
-                    self::arrayUnpack($data->toArray())
-                );
+        return $data;
     }
 
     /**
@@ -250,6 +253,29 @@ class Distiller implements DistillerInterface
                 }
             }
         }
+    }
+
+    /**
+     * Divides the packed array of raw data into levels, so that the data can be
+     * filtered from the deepest to the shallowest level.
+     *
+     * @return array
+     */
+    protected function prepareRawDataForFiltering(): array
+    {
+        /* @var $rawData array */
+        $rawData = self::arrayPack($this->getRawData());
+
+        $results = [];
+
+        foreach ($rawData as $key => $value) {
+            $parts = explode(".", $key);
+            $results[count($parts)][$key] = $value;
+        }
+
+        ksort($results);
+
+        return array_reverse($results);
     }
 
     /**
@@ -350,7 +376,7 @@ class Distiller implements DistillerInterface
     {
         $result = array();
         foreach ($array as $key => $value) {
-            if (is_array($value) && count($value) !== 0) {
+            if (\is_array($value) && \count($value) !== 0) {
                 $result = $result + self::arrayPack($value, $prefix . $key . '.', true);
             } else {
                 $result[$prefix . $key] = $value;
@@ -372,7 +398,7 @@ class Distiller implements DistillerInterface
         $result = array();
         foreach ($array as $key => $value) {
             $result[$prefix . $key] = $value;
-            if (is_array($value) && count($value) !== 0) {
+            if (\is_array($value) && \count($value) !== 0) {
                 $result = $result + self::arrayPackWithAncestors($value, $prefix . $key . '.', true);
             }
         }
