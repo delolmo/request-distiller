@@ -22,7 +22,7 @@ class DistillerTest extends TestCase
 {
     public function testArrayPack()
     {
-        $distiller = new Distiller(new Request());
+        $distiller = new Distiller(new ServerRequest());
 
         $method = new \ReflectionMethod(
             Distiller::class,
@@ -61,7 +61,7 @@ class DistillerTest extends TestCase
 
     public function testArrayPackWithAncestors()
     {
-        $distiller = new Distiller(new Request());
+        $distiller = new Distiller(new ServerRequest());
 
         $method = new \ReflectionMethod(
             Distiller::class,
@@ -96,7 +96,7 @@ class DistillerTest extends TestCase
 
     public function testArrayUnpack()
     {
-        $distiller = new Distiller(new Request());
+        $distiller = new Distiller(new ServerRequest());
 
         $arrayPack = new \ReflectionMethod(
             Distiller::class,
@@ -293,7 +293,7 @@ class DistillerTest extends TestCase
 
     public function testUnsupportedRequestException()
     {
-        $request = (new Request('/', 'GET'));
+        $request = (new ServerRequest([], [], '/', 'GET'));
         $distiller = (new Distiller($request));
         $this->expectException(UnsupportedRequestException::class);
         $distiller->getRawData();

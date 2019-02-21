@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DelOlmo\Distiller\Extractor;
 
 use PHPUnit\Framework\TestCase;
-use Zend\Diactoros\Request;
+use Zend\Diactoros\ServerRequest;
 
 /**
  * @author Antonio del Olmo García <adelolmog@gmail.com>
@@ -27,7 +27,7 @@ class HeadersExtractorTest extends TestCase
     {
         $this->extractor = new HeadersExtractor();
 
-        $request = (new Request('/'))
+        $request = (new ServerRequest([], [], '/'))
             ->withHeader('test', 'value');
 
         $this->request = $request;
