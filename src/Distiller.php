@@ -14,7 +14,7 @@ use DelOlmo\Distiller\Extractor\ExtractorInterface;
 use DelOlmo\Distiller\Parser\Modifier;
 use DelOlmo\Distiller\Parser\Parser;
 use DelOlmo\Distiller\Parser\ParserInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\RequestInterface;
 use Zend\Filter\FilterChain;
 use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorChain;
@@ -67,7 +67,7 @@ class Distiller implements DistillerInterface
     protected $validators = [];
 
     /**
-     * @var \Psr\Http\Message\ServerRequestInterface
+     * @var \Psr\Http\Message\RequestInterface
      */
     protected $request;
 
@@ -79,14 +79,14 @@ class Distiller implements DistillerInterface
     /**
      * Constructor
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Message\RequestInterface $request
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface|null $extractor
      * @param \DelOlmo\Distiller\Error\ErrorFactoryInterface|null $errorFactory
      * @param \DelOlmo\Distiller\Dto\DtoFactoryInterface|null $dtoFactory
      * @param \DelOlmo\Distiller\Parser\ParserInterface|null $parser
      */
     public function __construct(
-        ServerRequestInterface $request,
+        RequestInterface $request,
         ExtractorInterface $extractor = null,
         ErrorFactoryInterface $errorFactory = null,
         DtoFactoryInterface $dtoFactory = null,
