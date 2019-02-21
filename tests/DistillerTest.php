@@ -293,7 +293,7 @@ class DistillerTest extends TestCase
 
     public function testUnsupportedRequestException()
     {
-        $request = (new ServerRequest([], [], '/', 'GET'));
+        $request = (new Request('/', 'GET'));
         $distiller = (new Distiller($request));
         $this->expectException(UnsupportedRequestException::class);
         $distiller->getRawData();
