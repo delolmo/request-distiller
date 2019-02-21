@@ -35,7 +35,7 @@ class ExtractorChain implements ExtractorInterface
      *
      * @param \DelOlmo\Distiller\Extractor\ExtractorInterface[] $extractors
      */
-    public function __construct(Extractor ...$extractors)
+    public function __construct(ExtractorInterface ...$extractors)
     {
         $this->extractors = $extractors;
     }
