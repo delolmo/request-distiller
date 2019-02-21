@@ -15,7 +15,7 @@ use Zend\Diactoros\ServerRequest;
 class ParsedBodyExtractorTest extends TestCase
 {
     /**
-     * @var \DelOlmo\Distiller\Extractor\QueryParamsExtractor
+     * @var \DelOlmo\Distiller\Extractor\ParsedBodyExtractor
      */
     protected $extractor;
 
