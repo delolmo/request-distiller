@@ -33,7 +33,7 @@ class ExtractorChain implements ExtractorInterface
     /**
      * Constructor
      *
-     * @param \DelOlmo\Distiller\Extractor\ExtractorInterface[] $extractors
+     * @param \DelOlmo\Distiller\Extractor\ExtractorInterface[] ...$extractors
      */
     public function __construct(ExtractorInterface ...$extractors)
     {
