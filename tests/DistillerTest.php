@@ -175,9 +175,9 @@ class DistillerTest extends TestCase
             ->withAttribute("permissions", ["permission1", "permission2"]);
 
         $distiller = (new Distiller($request));
-        $distiller->addValidator('user.email', new NotEmpty(), true);
-        $distiller->addValidator('groups[].email', new NotEmpty(), true);
-        $distiller->addValidator('permissions[].{[0-9]{4}}', new NotEmpty(), true);
+        $distiller->addValidator('user.email', new NotEmpty());
+        $distiller->addValidator('groups[].email', new NotEmpty());
+        $distiller->addValidator('permissions[].{[0-9]{4}}', new NotEmpty());
 
         $method = new \ReflectionMethod(
             Distiller::class,
@@ -215,13 +215,13 @@ class DistillerTest extends TestCase
             ->withAttribute('users', [["name" => "hello@world.com"], ["name" => 'array@localhost.es']]);
 
         $distiller = (new Distiller($request));
-        $distiller->addValidator('email', new EmailAddress(), true);
-        $distiller->addValidator('users', new NotEmpty(), true);
-        $distiller->addValidator('users[]', new NotEmpty(), true);
-        $distiller->addValidator('users[].name', new NotEmpty(), true);
+        $distiller->addValidator('email', new EmailAddress());
+        $distiller->addValidator('users', new NotEmpty());
+        $distiller->addValidator('users[]', new NotEmpty());
+        $distiller->addValidator('users[].name', new NotEmpty());
 
         $distiller2 = clone $distiller;
-        $distiller2->addValidator('users[].email', new EmailAddress(), true);
+        $distiller2->addValidator('users[].email', new EmailAddress());
 
         $this->assertTrue($distiller->isValid());
         $this->assertFalse($distiller2->isValid());
@@ -267,7 +267,7 @@ class DistillerTest extends TestCase
             ->withAttribute('test', '');
 
         $distiller = (new Distiller($request));
-        $distiller->addValidator('test', new NotEmpty(), true);
+        $distiller->addValidator('test', new NotEmpty());
 
         $distiller->isValid();
         $errors = $distiller->getErrors();
