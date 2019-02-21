@@ -14,7 +14,7 @@ use DelOlmo\Distiller\Extractor\ExtractorInterface;
 use DelOlmo\Distiller\Parser\Modifier;
 use DelOlmo\Distiller\Parser\Parser;
 use DelOlmo\Distiller\Parser\ParserInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Filter\FilterChain;
 use Zend\Filter\FilterInterface as Filter;
 use Zend\Validator\ValidatorChain;
@@ -79,14 +79,14 @@ class Distiller implements DistillerInterface
     /**
      * Constructor
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param \DelOlmo\Distiller\Extractor\ExtractorInterface $extractor
-     * @param \DelOlmo\Distiller\Error\ErrorFactoryInterface $errorFactory
-     * @param \DelOlmo\Distiller\Dto\DtoFactoryInterface $dtoFactory
-     * @param \DelOlmo\Distiller\Dto\ParserInterface $parser
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \DelOlmo\Distiller\Extractor\ExtractorInterface|null $extractor
+     * @param \DelOlmo\Distiller\Error\ErrorFactoryInterface|null $errorFactory
+     * @param \DelOlmo\Distiller\Dto\DtoFactoryInterface|null $dtoFactory
+     * @param \DelOlmo\Distiller\Parser\ParserInterface|null $parser
      */
     public function __construct(
-        RequestInterface $request,
+        ServerRequestInterface $request,
         ExtractorInterface $extractor = null,
         ErrorFactoryInterface $errorFactory = null,
         DtoFactoryInterface $dtoFactory = null,
@@ -117,8 +117,18 @@ class Distiller implements DistillerInterface
             $this->filters[$pattern] = new FilterChain();
         }
 
+        /* @var $callable callable|array */
+        $callable = [$this->filters[$pattern], 'attach'];
+
+        // Test if $callable is actually callable
+        if (!\is_callable($callable)) {
+            $message = "Trying to call 'attach' on FilterChain, but for "
+                . "some reason it is not callable.";
+            throw new \Exception($message);
+        }
+
         // Add the new filter to the filter chain
-        \call_user_func([$this->filters[$pattern], 'attach'], $filter);
+        \call_user_func($callable, $filter);
     }
 
     /**
@@ -131,8 +141,18 @@ class Distiller implements DistillerInterface
             $this->validators[$pattern] = new ValidatorChain();
         }
 
+        /* @var $callable callable|array */
+        $callable = [$this->validators[$pattern], 'attach'];
+
+        // Test if $callable is actually callable
+        if (!\is_callable($callable)) {
+            $message = "Trying to call 'attach' on ValidatorChain, but for "
+                . "some reason it is not callable.";
+            throw new \Exception($message);
+        }
+
         // Add the new validator to the validator chain
-        \call_user_func([$this->validators[$pattern], 'attach'], $validator);
+        \call_user_func($callable, $validator);
     }
 
     /**
@@ -377,7 +397,7 @@ class Distiller implements DistillerInterface
         $result = array();
         foreach ($array as $key => $value) {
             if (\is_array($value) && \count($value) !== 0) {
-                $result = $result + self::arrayPack($value, $prefix . $key . '.', true);
+                $result = $result + self::arrayPack($value, $prefix . $key . '.');
             } else {
                 $result[$prefix . $key] = $value;
             }
@@ -399,7 +419,7 @@ class Distiller implements DistillerInterface
         foreach ($array as $key => $value) {
             $result[$prefix . $key] = $value;
             if (\is_array($value) && \count($value) !== 0) {
-                $result = $result + self::arrayPackWithAncestors($value, $prefix . $key . '.', true);
+                $result = $result + self::arrayPackWithAncestors($value, $prefix . $key . '.');
             }
         }
         return $result;
@@ -472,8 +492,7 @@ class Distiller implements DistillerInterface
     /**
      * Creates the regular expression to compare against the field's name.
      *
-     * @param string $pattern
-     * @return string
+     * @return \DelOlmo\Distiller\Parser\ParserInterface
      */
     protected static function createDefaultParser(): ParserInterface
     {
