@@ -2,7 +2,6 @@
     "name": "delolmo/request-distiller",
     "type": "library",
     "description": "Powerful, flexible validation and filtering for PSR-7 requests.",
-    "license": "MIT",
     "keywords": [
         "psr-7",
         "http",
@@ -13,8 +12,20 @@
         "zend-validator"
     ],
     "homepage": "https://github.com/delolmo/request-distiller",
-    "support": {
-        "issues": "https://github.com/delolmo/request-distiller/issues"
+    "license": "MIT",
+    "require": {
+        "php": ">=7.1",
+        "psr/http-message": "^1.0",
+        "zendframework/zend-filter": "^2.8",
+        "zendframework/zend-validator": "^2.10"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.0",
+        "phpstan/phpstan": "^0.11",
+        "phpstan/phpstan-phpunit": "^0.11.0",
+        "phpunit/phpunit": "^7.5",
+        "squizlabs/php_codesniffer": "^3.0",
+        "zendframework/zend-diactoros": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -26,24 +37,19 @@
             "DelOlmo\\Distiller\\": "tests/"
         }
     },
-    "require": {
-        "php": ">=7.1",
-        "psr/http-message": "^1.0",
-        "zendframework/zend-filter": "^2.8",
-        "zendframework/zend-validator": "^2.10"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^6.0|^7.0",
-        "friendsofphp/php-cs-fixer": "^2.0",
-        "squizlabs/php_codesniffer": "^3.0",
-        "zendframework/zend-diactoros": "^2.0"
-    },
     "scripts": {
+        "coverage": "phpunit --coverage-html=coverage",
+        "phpcbf": "phpcbf",
+        "phpcs": "phpcs",
+        "phpstan": "phpstan analyse",
+        "phpunit": "phpunit --configuration phpunit.xml.dist",
         "test": [
-            "phpunit --configuration phpunit.xml.dist",
-            "phpcs"
-        ],
-        "cs-fix": "php-cs-fixer fix .",
-        "coverage": "phpunit --coverage-html=coverage"
+            "@phpunit",
+            "@phpcs",
+            "@phpstan"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/delolmo/request-distiller/issues"
     }
 }
