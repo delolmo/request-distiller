@@ -30,7 +30,7 @@ interface ErrorInterface
     /**
      * Returns the validator that originated the error.
      *
-     * @return Zend\Validator\ValidatorInterface
+     * @return \Zend\Validator\ValidatorInterface
      */
     public function getValidator(): ValidatorInterface;
 
