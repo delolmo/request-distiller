@@ -13,5 +13,11 @@ parameters:
         -
             message: '#Call to an undefined method [a-zA-Z0-9\\_]+::getQueryParams\(\)#'
             path: %currentWorkingDirectory%/src/Extractor/QueryParamsExtractor.php
+        -
+            message: '#Call to an undefined method Zend\\Filter\\FilterInterface::attach\(\)#'
+            path: %currentWorkingDirectory%/src/Distiller.php
+        -
+            message: '#Call to an undefined method Zend\\Validator\\ValidatorInterface::attach\(\)#'
+            path: %currentWorkingDirectory%/src/Distiller.php
 includes:
     - vendor/phpstan/phpstan-phpunit/extension.neon

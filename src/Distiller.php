@@ -113,22 +113,16 @@ class Distiller implements DistillerInterface
     public function addFilter(string $pattern, Filter $filter)
     {
         // If the filter is not an instance of FilterChain, create it
-        if (empty($this->filters[$pattern])) {
+        if (empty($this->filters[$pattern]) ||
+            !$this->filters[$pattern] instanceof FilterChain) {
             $this->filters[$pattern] = new FilterChain();
         }
 
-        /* @var $callable callable|array */
-        $callable = [$this->filters[$pattern], 'attach'];
+        /* @var $filterChain \Zend\Filter\FilterChain */
+        $filterChain = $this->filters[$pattern];
 
-        // Test if $callable is actually callable
-        if (!\is_callable($callable)) {
-            $message = "Trying to call 'attach' on FilterChain, but for "
-                . "some reason it is not callable.";
-            throw new \Exception($message);
-        }
-
-        // Add the new filter to the filter chain
-        \call_user_func($callable, $filter);
+        // Attach the filter to the filter chain
+        $filterChain->attach($filter);
     }
 
     /**
@@ -137,22 +131,16 @@ class Distiller implements DistillerInterface
     public function addValidator(string $pattern, Validator $validator)
     {
         // If the validator is not an instance of ValidatorChain, create it
-        if (empty($this->validators[$pattern])) {
+        if (empty($this->validators[$pattern]) ||
+            !$this->validators[$pattern] instanceof ValidatorChain) {
             $this->validators[$pattern] = new ValidatorChain();
         }
 
-        /* @var $callable callable|array */
-        $callable = [$this->validators[$pattern], 'attach'];
+        /* @var $validatorChain \Zend\Validator\ValidatorChain */
+        $validatorChain = $this->validators[$pattern];
 
-        // Test if $callable is actually callable
-        if (!\is_callable($callable)) {
-            $message = "Trying to call 'attach' on ValidatorChain, but for "
-                . "some reason it is not callable.";
-            throw new \Exception($message);
-        }
-
-        // Add the new validator to the validator chain
-        \call_user_func($callable, $validator);
+        // Attach the validator to the validator chain
+        $validatorChain->attach($validator);
     }
 
     /**
