@@ -468,7 +468,7 @@ class Distiller implements DistillerInterface
     }
 
     /**
-     * Creates a default ErrorFactor implementation.
+     * Creates a default ErrorFactory implementation.
      *
      * @return \DelOlmo\Distiller\Error\ErrorFactoryInterface
      */
